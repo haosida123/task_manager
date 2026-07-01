@@ -1,0 +1,57 @@
+/* ============================================================================
+   Design tokens — "Research Ledger" academic theme.
+   Warm paper background, ink typography, hairline rules, restrained plum accent
+   (a nod to a university). No heavy shadows; depth comes from borders + tone.
+   ========================================================================== */
+:root {
+  /* --- Surfaces & ink ----------------------------------------------------- */
+  --paper: #f6f2ea;          /* app background — warm ivory */
+  --paper-2: #efe9dd;        /* sunken areas, table header */
+  --surface: #fffdf8;        /* cards, panels */
+  --surface-raised: #ffffff; /* modals, popovers */
+  --ink: #21201c;            /* primary text — warm near-black */
+  --ink-2: #4a4640;          /* secondary text */
+  --ink-3: #7c766b;          /* muted / meta text */
+  --ink-4: #a49d8e;          /* faint labels, placeholders */
+
+  /* --- Lines -------------------------------------------------------------- */
+  --line: #e3dccb;           /* standard hairline */
+  --line-strong: #d3cab4;    /* emphasized rule */
+  --line-soft: #ece6d8;      /* very subtle divider */
+
+  /* --- Accent (plum / a university purple, muted) ------------------------- */
+  --accent: #4e2a84;
+  --accent-deep: #3a1f66;
+  --accent-soft: #ede7f3;    /* tint background */
+  --accent-line: #d8cce6;
+  --accent-ink: #401f75;
+
+  /* --- Semantic status/priority hues (muted, print-friendly) -------------- */
+  --red: #9a3b34;    --red-soft: #f4e4e0;    --red-line: #e6c9c2;
+  --amber: #8a5a13;  --amber-soft: #f6ecd8;  --amber-line: #e8d4ac;
+  --green: #4a6b3f;  --green-soft: #e7eede;  --green-line: #cfdcbe;
+  --blue: #2f5675;   --blue-soft: #e2ebf2;   --blue-line: #c4d5e2;
+  --slate: #5b5750;  --slate-soft: #ece8df;  --slate-line: #d8d1c2;
+  --plum: #5d3a7e;   --plum-soft: #ece4f2;   --plum-line: #d6c7e4;
+
+  /* --- Typography --------------------------------------------------------- */
+  --serif: 'Source Serif 4', 'Iowan Old Style', Georgia, 'Times New Roman', serif;
+  --sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --mono: 'JetBrains Mono', 'SF Mono', ui-monospace, 'Cascadia Code', monospace;
+
+  /* --- Radii & spacing ---------------------------------------------------- */
+  --r-sm: 4px;
+  --r-md: 6px;
+  --r-lg: 10px;
+  --r-pill: 999px;
+
+  /* --- Elevation (kept subtle) ------------------------------------------- */
+  --shadow-sm: 0 1px 2px rgba(33, 30, 22, 0.05);
+  --shadow-md: 0 6px 22px rgba(33, 30, 22, 0.10);
+  --shadow-lg: 0 18px 48px rgba(33, 30, 22, 0.16);
+
+  /* --- Focus -------------------------------------------------------------- */
+  --focus-ring: 0 0 0 3px rgba(78, 42, 132, 0.28);
+
+  --content-max: 1240px;
+}

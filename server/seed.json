@@ -1,0 +1,467 @@
+{
+  "projects": [
+    {
+      "id": "solver-benchmark",
+      "name": "Solver benchmark suite",
+      "area": "Numerical Methods",
+      "description": "A reproducible benchmark harness comparing iterative solvers across a battery of sparse test problems, with automated timing and accuracy plots.",
+      "status": "active",
+      "priority": "high",
+      "effort": "high",
+      "progress": 55,
+      "collaborators": [
+        "Alex"
+      ],
+      "tags": [
+        "benchmark",
+        "solvers",
+        "reproducible"
+      ],
+      "dueDate": null,
+      "pinned": true,
+      "archived": false,
+      "order": 0,
+      "createdAt": "2026-01-15T09:00:00.000Z",
+      "updatedAt": "2026-06-30T12:00:00.000Z"
+    },
+    {
+      "id": "survey-paper",
+      "name": "Survey paper draft",
+      "area": "Literature",
+      "description": "A structured literature survey pulling together the last decade of work in the area, with a taxonomy figure and a gap analysis.",
+      "status": "in_review",
+      "priority": "medium",
+      "effort": "medium",
+      "progress": 80,
+      "collaborators": [],
+      "tags": [
+        "paper",
+        "survey"
+      ],
+      "dueDate": null,
+      "pinned": true,
+      "archived": false,
+      "order": 1,
+      "createdAt": "2026-01-15T09:00:00.000Z",
+      "updatedAt": "2026-06-20T12:00:00.000Z"
+    },
+    {
+      "id": "data-pipeline",
+      "name": "Dataset cleaning pipeline",
+      "area": "Data Engineering",
+      "description": "An end-to-end pipeline that ingests raw measurement files, validates schema, removes duplicates, and emits an analysis-ready table.",
+      "status": "active",
+      "priority": "high",
+      "effort": "medium",
+      "progress": 45,
+      "collaborators": [
+        "Sam"
+      ],
+      "tags": [
+        "data",
+        "pipeline",
+        "etl"
+      ],
+      "dueDate": null,
+      "pinned": false,
+      "archived": false,
+      "order": 2,
+      "createdAt": "2026-01-15T09:00:00.000Z",
+      "updatedAt": "2026-06-29T12:00:00.000Z"
+    },
+    {
+      "id": "reproducibility-study",
+      "name": "Reproducibility study",
+      "area": "Methodology",
+      "description": "Re-implement three widely-cited results from scratch and document where methods sections were under-specified.",
+      "status": "active",
+      "priority": "medium",
+      "effort": "medium",
+      "progress": 35,
+      "collaborators": [
+        "Jordan"
+      ],
+      "tags": [
+        "reproducibility",
+        "methodology"
+      ],
+      "dueDate": null,
+      "pinned": false,
+      "archived": false,
+      "order": 3,
+      "createdAt": "2026-01-15T09:00:00.000Z",
+      "updatedAt": "2026-06-27T12:00:00.000Z"
+    },
+    {
+      "id": "conf-talk",
+      "name": "Conference talk prep",
+      "area": "Dissemination",
+      "description": "Slides and a live demo for an upcoming conference talk, including a short recorded backup in case the demo fails.",
+      "status": "planning",
+      "priority": "medium",
+      "effort": "low",
+      "progress": 15,
+      "collaborators": [],
+      "tags": [
+        "talk",
+        "slides"
+      ],
+      "dueDate": null,
+      "pinned": false,
+      "archived": false,
+      "order": 4,
+      "createdAt": "2026-01-15T09:00:00.000Z",
+      "updatedAt": "2026-06-22T12:00:00.000Z"
+    },
+    {
+      "id": "model-prototype",
+      "name": "Exploratory model prototype",
+      "area": "Modeling",
+      "description": "A quick prototype to test whether a lightweight model can match the heavy baseline at a fraction of the cost.",
+      "status": "planning",
+      "priority": "high",
+      "effort": "high",
+      "progress": 10,
+      "collaborators": [],
+      "tags": [
+        "prototype",
+        "modeling"
+      ],
+      "dueDate": null,
+      "pinned": false,
+      "archived": false,
+      "order": 5,
+      "createdAt": "2026-01-15T09:00:00.000Z",
+      "updatedAt": "2026-06-18T12:00:00.000Z"
+    },
+    {
+      "id": "grant-report",
+      "name": "Grant progress report",
+      "area": "Admin",
+      "description": "The annual progress report for the funding agency: milestones met, budget summary, and next-year plan.",
+      "status": "on_hold",
+      "priority": "low",
+      "effort": "medium",
+      "progress": 20,
+      "collaborators": [],
+      "tags": [
+        "admin",
+        "funding"
+      ],
+      "dueDate": null,
+      "pinned": false,
+      "archived": false,
+      "order": 6,
+      "createdAt": "2026-01-15T09:00:00.000Z",
+      "updatedAt": "2026-05-30T12:00:00.000Z"
+    },
+    {
+      "id": "student-onboarding",
+      "name": "Onboarding a new student",
+      "area": "Mentoring",
+      "description": "A guided ramp-up plan: reading list, a starter task, and weekly check-ins for a new student joining the group.",
+      "status": "active",
+      "priority": "medium",
+      "effort": "low",
+      "progress": 50,
+      "collaborators": [
+        "Riley"
+      ],
+      "tags": [
+        "mentoring"
+      ],
+      "dueDate": null,
+      "pinned": false,
+      "archived": false,
+      "order": 7,
+      "createdAt": "2026-01-15T09:00:00.000Z",
+      "updatedAt": "2026-06-26T12:00:00.000Z"
+    },
+    {
+      "id": "code-migration",
+      "name": "Legacy code migration",
+      "area": "Software",
+      "description": "Port the analysis scripts to the new library API and delete the deprecated compatibility shims.",
+      "status": "done",
+      "priority": "low",
+      "effort": "high",
+      "progress": 100,
+      "collaborators": [],
+      "tags": [
+        "refactor",
+        "software"
+      ],
+      "dueDate": null,
+      "pinned": false,
+      "archived": false,
+      "order": 8,
+      "createdAt": "2026-01-15T09:00:00.000Z",
+      "updatedAt": "2026-04-30T12:00:00.000Z"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "t1",
+      "projectId": "solver-benchmark",
+      "title": "Add preconditioner comparison",
+      "done": false,
+      "priority": "high",
+      "effort": "high",
+      "order": 0,
+      "createdAt": "2026-01-15T09:00:00.000Z",
+      "completedAt": null
+    },
+    {
+      "id": "t2",
+      "projectId": "solver-benchmark",
+      "title": "Wire up automated timing plots",
+      "done": false,
+      "priority": "medium",
+      "effort": "medium",
+      "order": 1,
+      "createdAt": "2026-01-15T09:00:00.000Z",
+      "completedAt": null
+    },
+    {
+      "id": "t3",
+      "projectId": "solver-benchmark",
+      "title": "Scaffold the test-problem loader",
+      "done": true,
+      "priority": "medium",
+      "effort": "medium",
+      "order": 2,
+      "createdAt": "2026-01-15T09:00:00.000Z",
+      "completedAt": "2026-04-10T12:00:00.000Z"
+    },
+    {
+      "id": "t4",
+      "projectId": "survey-paper",
+      "title": "Address reviewer comments on Section 3",
+      "done": false,
+      "priority": "high",
+      "effort": "medium",
+      "order": 0,
+      "createdAt": "2026-01-15T09:00:00.000Z",
+      "completedAt": null
+    },
+    {
+      "id": "t5",
+      "projectId": "survey-paper",
+      "title": "Redraw the taxonomy figure",
+      "done": false,
+      "priority": "medium",
+      "effort": "low",
+      "order": 1,
+      "createdAt": "2026-01-15T09:00:00.000Z",
+      "completedAt": null
+    },
+    {
+      "id": "t6",
+      "projectId": "data-pipeline",
+      "title": "Add schema validation step",
+      "done": false,
+      "priority": "high",
+      "effort": "medium",
+      "order": 0,
+      "createdAt": "2026-01-15T09:00:00.000Z",
+      "completedAt": null
+    },
+    {
+      "id": "t7",
+      "projectId": "data-pipeline",
+      "title": "Handle malformed timestamp rows",
+      "done": false,
+      "priority": "medium",
+      "effort": "medium",
+      "order": 1,
+      "createdAt": "2026-01-15T09:00:00.000Z",
+      "completedAt": null
+    },
+    {
+      "id": "t8",
+      "projectId": "data-pipeline",
+      "title": "Write unit tests for the dedup stage",
+      "done": false,
+      "priority": "low",
+      "effort": "low",
+      "order": 2,
+      "createdAt": "2026-01-15T09:00:00.000Z",
+      "completedAt": null
+    },
+    {
+      "id": "t9",
+      "projectId": "reproducibility-study",
+      "title": "Reproduce result #1 (baseline)",
+      "done": false,
+      "priority": "medium",
+      "effort": "high",
+      "order": 0,
+      "createdAt": "2026-01-15T09:00:00.000Z",
+      "completedAt": null
+    },
+    {
+      "id": "t10",
+      "projectId": "reproducibility-study",
+      "title": "Log every undocumented assumption",
+      "done": false,
+      "priority": "medium",
+      "effort": "low",
+      "order": 1,
+      "createdAt": "2026-01-15T09:00:00.000Z",
+      "completedAt": null
+    },
+    {
+      "id": "t11",
+      "projectId": "conf-talk",
+      "title": "Outline the narrative arc",
+      "done": false,
+      "priority": "medium",
+      "effort": "low",
+      "order": 0,
+      "createdAt": "2026-01-15T09:00:00.000Z",
+      "completedAt": null
+    },
+    {
+      "id": "t12",
+      "projectId": "conf-talk",
+      "title": "Record a backup demo video",
+      "done": false,
+      "priority": "low",
+      "effort": "medium",
+      "order": 1,
+      "createdAt": "2026-01-15T09:00:00.000Z",
+      "completedAt": null
+    },
+    {
+      "id": "t13",
+      "projectId": "model-prototype",
+      "title": "Sketch the architecture",
+      "done": false,
+      "priority": "high",
+      "effort": "medium",
+      "order": 0,
+      "createdAt": "2026-01-15T09:00:00.000Z",
+      "completedAt": null
+    },
+    {
+      "id": "t14",
+      "projectId": "grant-report",
+      "title": "Collect milestone evidence from the team",
+      "done": false,
+      "priority": "medium",
+      "effort": "low",
+      "order": 0,
+      "createdAt": "2026-01-15T09:00:00.000Z",
+      "completedAt": null
+    },
+    {
+      "id": "t15",
+      "projectId": "student-onboarding",
+      "title": "Share the reading list",
+      "done": true,
+      "priority": "medium",
+      "effort": "low",
+      "order": 0,
+      "createdAt": "2026-01-15T09:00:00.000Z",
+      "completedAt": "2026-06-05T12:00:00.000Z"
+    },
+    {
+      "id": "t16",
+      "projectId": "student-onboarding",
+      "title": "Define a good starter task",
+      "done": false,
+      "priority": "medium",
+      "effort": "low",
+      "order": 1,
+      "createdAt": "2026-01-15T09:00:00.000Z",
+      "completedAt": null
+    },
+    {
+      "id": "t17",
+      "projectId": "code-migration",
+      "title": "Port the plotting module",
+      "done": true,
+      "priority": "medium",
+      "effort": "medium",
+      "order": 0,
+      "createdAt": "2026-01-15T09:00:00.000Z",
+      "completedAt": "2026-04-20T12:00:00.000Z"
+    },
+    {
+      "id": "t18",
+      "projectId": "code-migration",
+      "title": "Remove deprecated shims",
+      "done": true,
+      "priority": "low",
+      "effort": "low",
+      "order": 1,
+      "createdAt": "2026-01-15T09:00:00.000Z",
+      "completedAt": "2026-04-28T12:00:00.000Z"
+    }
+  ],
+  "updates": [
+    {
+      "id": "u1",
+      "projectId": "solver-benchmark",
+      "date": "2026-06-28",
+      "body": "Reproduced published baselines within 3% on the reference machine.",
+      "createdAt": "2026-06-28T12:00:00.000Z"
+    },
+    {
+      "id": "u2",
+      "projectId": "solver-benchmark",
+      "date": "2026-05-12",
+      "body": "First end-to-end run across all 12 test problems.",
+      "createdAt": "2026-05-12T12:00:00.000Z"
+    },
+    {
+      "id": "u3",
+      "projectId": "survey-paper",
+      "date": "2026-06-18",
+      "body": "Submitted first draft to co-authors for internal review.",
+      "createdAt": "2026-06-18T12:00:00.000Z"
+    },
+    {
+      "id": "u4",
+      "projectId": "data-pipeline",
+      "date": "2026-06-25",
+      "body": "Ingest + dedup stages running on the full raw set.",
+      "createdAt": "2026-06-25T12:00:00.000Z"
+    },
+    {
+      "id": "u5",
+      "projectId": "reproducibility-study",
+      "date": "2026-06-15",
+      "body": "Result #1 reproduced; two hyperparameters had to be guessed.",
+      "createdAt": "2026-06-15T12:00:00.000Z"
+    },
+    {
+      "id": "u6",
+      "projectId": "conf-talk",
+      "date": "2026-06-10",
+      "body": "Talk accepted; drafting the outline this week.",
+      "createdAt": "2026-06-10T12:00:00.000Z"
+    },
+    {
+      "id": "u7",
+      "projectId": "grant-report",
+      "date": "2026-05-28",
+      "body": "On hold until the quarterly numbers are finalized.",
+      "createdAt": "2026-05-28T12:00:00.000Z"
+    },
+    {
+      "id": "u8",
+      "projectId": "student-onboarding",
+      "date": "2026-06-24",
+      "body": "First check-in went well; environment is set up.",
+      "createdAt": "2026-06-24T12:00:00.000Z"
+    },
+    {
+      "id": "u9",
+      "projectId": "code-migration",
+      "date": "2026-04-30",
+      "body": "Migration complete; all tests green on the new API.",
+      "createdAt": "2026-04-30T12:00:00.000Z"
+    }
+  ]
+}
