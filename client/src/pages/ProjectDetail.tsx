@@ -116,6 +116,24 @@ export default function ProjectDetail() {
       );
     });
 
+  const reorderTasks = (ids: string[]) =>
+    withSaving(async () => {
+      if (!id) return;
+      // Optimistically apply the new order (index within `ids`), then persist.
+      setProject((prev) =>
+        prev
+          ? {
+              ...prev,
+              tasks: prev.tasks.map((t) => {
+                const i = ids.indexOf(t.id);
+                return i === -1 ? t : { ...t, order: i };
+              }),
+            }
+          : prev,
+      );
+      await api.reorderTasks(id, ids);
+    });
+
   const addUpdate = (payload: NewUpdate) =>
     withSaving(async () => {
       if (!id) return;
@@ -203,6 +221,7 @@ export default function ProjectDetail() {
             onAdd={addTask}
             onPatch={patchTask}
             onDelete={deleteTask}
+            onReorder={reorderTasks}
           />
           <UpdateTimeline
             updates={project.updates}

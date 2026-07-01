@@ -1,6 +1,6 @@
 // ProjectRow — one project as a ledger row with an inline expandable panel.
-import { useState } from 'react';
-import type { KeyboardEvent, MouseEvent } from 'react';
+import { useRef, useState } from 'react';
+import type { KeyboardEvent, MouseEvent, DragEvent } from 'react';
 import { Link } from 'react-router-dom';
 import {
   AvatarStack,
@@ -25,14 +25,40 @@ interface ProjectRowProps {
   project: ProjectSummary;
   refYear: number;
   onPatch: (id: string, patch: ProjectPatch) => Promise<void>;
+  reorderable: boolean;
+  dragging: boolean;
+  dropTarget: boolean;
+  onDragStartRow: () => void;
+  onDragOverRow: () => void;
+  onDropRow: () => void;
+  onDragEndRow: () => void;
 }
 
-export function ProjectRow({ project, refYear, onPatch }: ProjectRowProps) {
+export function ProjectRow({
+  project,
+  refYear,
+  onPatch,
+  reorderable,
+  dragging,
+  dropTarget,
+  onDragStartRow,
+  onDragOverRow,
+  onDropRow,
+  onDragEndRow,
+}: ProjectRowProps) {
   const [expanded, setExpanded] = useState(false);
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const rowRef = useRef<HTMLDivElement>(null);
 
   const projectPath = `/project/${project.id}`;
+
+  function handleDragStart(e: DragEvent) {
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', project.id);
+    if (rowRef.current) e.dataTransfer.setDragImage(rowRef.current, 24, 20);
+    onDragStartRow();
+  }
 
   async function patch(p: ProjectPatch) {
     setSaving(true);
@@ -70,7 +96,25 @@ export function ProjectRow({ project, refYear, onPatch }: ProjectRowProps) {
   const nextTop = project.nextSteps.slice(0, 3);
 
   return (
-    <div className={`ledger-row${project.pinned ? ' ledger-row--pinned' : ''}`}>
+    <div
+      ref={rowRef}
+      className={
+        `ledger-row${project.pinned ? ' ledger-row--pinned' : ''}` +
+        `${dragging ? ' is-dragging' : ''}${dropTarget ? ' is-drop-target' : ''}`
+      }
+      onDragOver={(e) => {
+        if (reorderable) {
+          e.preventDefault();
+          onDragOverRow();
+        }
+      }}
+      onDrop={(e) => {
+        if (reorderable) {
+          e.preventDefault();
+          onDropRow();
+        }
+      }}
+    >
       <div
         className="ledger-row__main"
         role="button"
@@ -79,18 +123,34 @@ export function ProjectRow({ project, refYear, onPatch }: ProjectRowProps) {
         onClick={toggle}
         onKeyDown={onRowKey}
       >
-        {/* chevron */}
-        <button
-          type="button"
-          className="btn btn--icon row-chevron"
-          aria-label={expanded ? 'Collapse row' : 'Expand row'}
-          onClick={(e) => {
-            stop(e);
-            toggle();
-          }}
-        >
-          <Icon name={expanded ? 'chevron-down' : 'chevron-right'} size={16} />
-        </button>
+        {/* drag handle + chevron */}
+        <div className="row-controls">
+          {reorderable && (
+            <button
+              type="button"
+              className="drag-handle"
+              aria-label="Drag to reorder"
+              title="Drag to reorder"
+              draggable
+              onDragStart={handleDragStart}
+              onDragEnd={onDragEndRow}
+              onClick={stop}
+            >
+              <Icon name="grip" size={15} />
+            </button>
+          )}
+          <button
+            type="button"
+            className="btn btn--icon row-chevron"
+            aria-label={expanded ? 'Collapse row' : 'Expand row'}
+            onClick={(e) => {
+              stop(e);
+              toggle();
+            }}
+          >
+            <Icon name={expanded ? 'chevron-down' : 'chevron-right'} size={16} />
+          </button>
+        </div>
 
         {/* project */}
         <div className="col-project">
@@ -109,7 +169,7 @@ export function ProjectRow({ project, refYear, onPatch }: ProjectRowProps) {
             </button>
             <Link
               to={projectPath}
-              className="proj-name truncate link-plain"
+              className="proj-name link-plain"
               onClick={stop}
               title={project.name}
             >
@@ -117,7 +177,7 @@ export function ProjectRow({ project, refYear, onPatch }: ProjectRowProps) {
             </Link>
           </div>
           <div className="proj-meta">
-            {project.area && <span className="proj-area truncate">{project.area}</span>}
+            {project.area && <span className="proj-area">{project.area}</span>}
             <span className="proj-tags">
               {project.tags.slice(0, 2).map((t) => (
                 <span className="chip" key={t}>
@@ -148,7 +208,7 @@ export function ProjectRow({ project, refYear, onPatch }: ProjectRowProps) {
           {project.latestUpdate ? (
             <>
               <div className="upd-date mono">{formatDate(project.latestUpdate.date, refYear)}</div>
-              <div className="upd-body truncate">{project.latestUpdate.body}</div>
+              <div className="upd-body">{project.latestUpdate.body}</div>
             </>
           ) : (
             <span className="cell-empty">No updates</span>
@@ -160,7 +220,7 @@ export function ProjectRow({ project, refYear, onPatch }: ProjectRowProps) {
           {nextTop.length > 0 ? (
             <ul className="nextsteps">
               {nextTop.map((s, i) => (
-                <li className="nextsteps__item truncate" key={i} title={s}>
+                <li className="nextsteps__item" key={i} title={s}>
                   {s}
                 </li>
               ))}

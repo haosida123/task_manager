@@ -45,6 +45,8 @@ export const api = {
     request<ProjectSummary>(`/projects/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
   deleteProject: (id: string) =>
     request<{ ok: true }>(`/projects/${id}`, { method: 'DELETE' }),
+  reorderProjects: (ids: string[]) =>
+    request<{ ok: true }>('/projects/reorder', { method: 'POST', body: JSON.stringify({ ids }) }),
 
   // tasks
   createTask: (projectId: string, body: NewTask) =>
@@ -52,6 +54,11 @@ export const api = {
   updateTask: (id: string, body: TaskPatch) =>
     request<Task>(`/tasks/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
   deleteTask: (id: string) => request<{ ok: true }>(`/tasks/${id}`, { method: 'DELETE' }),
+  reorderTasks: (projectId: string, ids: string[]) =>
+    request<{ ok: true }>(`/projects/${projectId}/tasks/reorder`, {
+      method: 'POST',
+      body: JSON.stringify({ ids }),
+    }),
 
   // updates
   createUpdate: (projectId: string, body: NewUpdate) =>

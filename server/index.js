@@ -94,6 +94,20 @@ app.post('/api/projects', (req, res) => {
   res.status(201).json(summarize(db, project));
 });
 
+// Reorder projects: body { ids: [...] } sets each project's order to its index.
+// Defined before the :id routes so the literal path matches cleanly.
+app.post('/api/projects/reorder', (req, res) => {
+  const db = load();
+  const ids = (req.body && req.body.ids) || [];
+  if (!Array.isArray(ids)) return res.status(400).json({ error: 'ids must be an array' });
+  const orderMap = new Map(ids.map((id, i) => [id, i]));
+  db.projects.forEach((p) => {
+    if (orderMap.has(p.id)) p.order = orderMap.get(p.id);
+  });
+  persist();
+  res.json({ ok: true });
+});
+
 app.get('/api/projects/:id', (req, res) => {
   const db = load();
   const project = findProject(db, req.params.id);
@@ -161,6 +175,22 @@ app.post('/api/projects/:id/tasks', (req, res) => {
   project.updatedAt = now();
   persist();
   res.status(201).json(task);
+});
+
+// Reorder a project's tasks: body { ids: [...] } sets each task's order.
+app.post('/api/projects/:id/tasks/reorder', (req, res) => {
+  const db = load();
+  const project = findProject(db, req.params.id);
+  if (!project) return res.status(404).json({ error: 'Project not found' });
+  const ids = (req.body && req.body.ids) || [];
+  if (!Array.isArray(ids)) return res.status(400).json({ error: 'ids must be an array' });
+  const orderMap = new Map(ids.map((id, i) => [id, i]));
+  db.tasks.forEach((t) => {
+    if (t.projectId === project.id && orderMap.has(t.id)) t.order = orderMap.get(t.id);
+  });
+  project.updatedAt = now();
+  persist();
+  res.json({ ok: true });
 });
 
 app.patch('/api/tasks/:id', (req, res) => {

@@ -111,7 +111,7 @@
 
 /* --- Ledger table --------------------------------------------------------- */
 .ledger {
-  --ledger-cols: 30px minmax(190px, 2.2fr) 84px 88px 140px minmax(140px, 1.5fr) minmax(140px, 1.3fr) 82px 96px;
+  --ledger-cols: 46px minmax(200px, 2.3fr) 80px 84px 118px minmax(175px, 2fr) minmax(165px, 1.8fr) 74px 92px;
   border: 1px solid var(--line);
   border-radius: var(--r-lg);
   background: var(--surface);
@@ -144,10 +144,11 @@
 .ledger-row:first-child { border-top: none; }
 .ledger-row--pinned { background: var(--accent-soft); }
 .ledger-row__main {
-  padding: 13px 18px;
+  padding: 14px 18px;
   cursor: pointer;
   transition: background 0.12s ease;
   min-height: 58px;
+  align-items: start; /* top-align so multi-line cells read cleanly */
 }
 .ledger-row:nth-child(even) .ledger-row__main { background: color-mix(in srgb, var(--line) 22%, transparent); }
 .ledger-row--pinned .ledger-row__main,
@@ -155,12 +156,43 @@
 .ledger-row__main:hover { background: var(--paper-2); }
 .ledger-row__main:focus-visible { box-shadow: inset var(--focus-ring); border-radius: 0; }
 
-/* chevron */
+/* row controls (drag handle + chevron) */
+.row-controls {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  margin-top: 1px;
+}
 .row-chevron {
   color: var(--ink-3);
   transition: transform 0.15s ease, color 0.12s ease;
 }
 .row-chevron:hover { color: var(--ink); }
+
+/* --- Drag-to-reorder ------------------------------------------------------ */
+.ledger-hint {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 8px 2px;
+}
+.drag-handle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 2px;
+  border: none;
+  background: transparent;
+  color: var(--ink-4);
+  border-radius: var(--r-sm);
+  cursor: grab;
+  touch-action: none;
+}
+.drag-handle:hover { color: var(--ink-2); background: var(--paper-2); }
+.drag-handle:active { cursor: grabbing; }
+.ledger-row.is-dragging { opacity: 0.45; }
+.ledger-row.is-drop-target { box-shadow: inset 0 2px 0 0 var(--accent); }
+.ledger-row.is-drop-target .ledger-row__main { background: var(--accent-soft); }
 
 /* project cell */
 .col-project { min-width: 0; }
@@ -181,20 +213,26 @@
   color: var(--ink);
   letter-spacing: -0.01em;
   min-width: 0;
+  line-height: 1.25;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  overflow-wrap: anywhere;
 }
 .proj-name:hover { color: var(--accent); text-decoration: none; }
 .proj-meta {
   display: flex;
   align-items: center;
-  gap: 6px;
-  margin-top: 3px;
+  flex-wrap: wrap;
+  gap: 4px 6px;
+  margin-top: 4px;
   min-width: 0;
 }
 .proj-area {
   font-size: 12px;
   color: var(--ink-3);
-  max-width: 40%;
-  flex-shrink: 0;
+  overflow-wrap: anywhere;
 }
 .proj-tags { display: flex; gap: 5px; min-width: 0; overflow: hidden; }
 .proj-tags .chip { font-size: 10.5px; padding: 2px 7px; }
@@ -205,16 +243,24 @@
 .upd-body {
   font-size: 12.5px;
   color: var(--ink-2);
-  margin-top: 2px;
+  margin-top: 3px;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 5;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  overflow-wrap: anywhere;
 }
 
 /* next steps cell */
-.nextsteps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.nextsteps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 5px; min-width: 0; }
 .nextsteps__item {
   position: relative;
   padding-left: 12px;
   font-size: 12px;
+  line-height: 1.4;
   color: var(--ink-2);
+  overflow-wrap: anywhere;
 }
 .nextsteps__item::before {
   content: '';
@@ -343,7 +389,7 @@
 /* --- Responsive ----------------------------------------------------------- */
 @media (max-width: 880px) {
   .ledger {
-    --ledger-cols: 28px minmax(150px, 2.6fr) 90px 130px minmax(140px, 1.5fr) 104px;
+    --ledger-cols: 42px minmax(150px, 2.6fr) 90px 130px minmax(140px, 1.5fr) 104px;
   }
   .col-effort,
   .col-update,

@@ -25,6 +25,16 @@ const PATHS: Record<string, JSX.Element> = {
   gauge: <path d="M12 22a10 10 0 100-20 10 10 0 000 20zM12 12l4-3" />,
   archive: <path d="M3 4h18v4H3zM5 8v12h14V8M10 12h4" />,
   reset: <path d="M3 12a9 9 0 109-9 9 9 0 00-7 3.3M3 3v3.3h3.3" />,
+  grip: (
+    <g fill="currentColor" stroke="none">
+      <circle cx="9" cy="5" r="1.4" />
+      <circle cx="9" cy="12" r="1.4" />
+      <circle cx="9" cy="19" r="1.4" />
+      <circle cx="15" cy="5" r="1.4" />
+      <circle cx="15" cy="12" r="1.4" />
+      <circle cx="15" cy="19" r="1.4" />
+    </g>
+  ),
 };
 
 interface IconProps {

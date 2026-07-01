@@ -45,7 +45,7 @@ export default function App() {
       <footer className="app-footer">
         <div className="container spread">
           <span className="tiny muted">Research Ledger — a private task ledger.</span>
-          <span className="tiny faint mono">v0.1</span>
+          <span className="tiny faint mono">v0.2</span>
         </div>
       </footer>
     </div>

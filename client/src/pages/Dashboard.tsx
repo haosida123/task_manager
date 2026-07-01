@@ -28,7 +28,7 @@ export default function Dashboard() {
   const [status, setStatus] = useState('all');
   const [priority, setPriority] = useState('all');
   const [area, setArea] = useState('all');
-  const [sort, setSort] = useState<SortKey>('updated');
+  const [sort, setSort] = useState<SortKey>('manual');
   const [modalOpen, setModalOpen] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
 
@@ -58,6 +58,28 @@ export default function Dashboard() {
   const handleCreated = useCallback((created: ProjectSummary) => {
     setProjects((prev) => [created, ...prev]);
   }, []);
+
+  // Drag-to-reorder: `ids` is the full desired order. Update local state
+  // optimistically, then persist. On failure, reload from the server.
+  const handleReorder = useCallback(
+    async (ids: string[]) => {
+      setProjects((prev) => {
+        const byId = new Map(prev.map((p) => [p.id, p]));
+        return ids
+          .map((id, i) => {
+            const p = byId.get(id);
+            return p ? { ...p, order: i } : null;
+          })
+          .filter((p): p is ProjectSummary => p !== null);
+      });
+      try {
+        await api.reorderProjects(ids);
+      } catch {
+        void load();
+      }
+    },
+    [load],
+  );
 
   const resetFilters = useCallback(() => {
     setSearch('');
@@ -114,12 +136,20 @@ export default function Dashboard() {
       }
     };
 
-    // Pinned projects float to the top within the chosen sort.
+    // Custom order = pure manual order (drag-to-reorder). Other sorts float
+    // pinned projects to the top.
     return [...filtered].sort((a, b) => {
+      if (sort === 'manual') return (a.order ?? 0) - (b.order ?? 0);
       if (a.pinned !== b.pinned) return a.pinned ? -1 : 1;
       return bySort(a, b);
     });
   }, [projects, search, status, priority, area, sort]);
+
+  // Drag-to-reorder is only meaningful in Custom order with no active filter
+  // (so the visible list is the full ordered portfolio).
+  const filtersActive =
+    search.trim() !== '' || status !== 'all' || priority !== 'all' || area !== 'all';
+  const reorderable = sort === 'manual' && !filtersActive;
 
   const subtitle = loading
     ? 'Loading portfolio…'
@@ -191,7 +221,13 @@ export default function Dashboard() {
               </Button>
             </div>
           ) : (
-            <ProjectTable projects={visible} refYear={refYear} onPatch={handlePatch} />
+            <ProjectTable
+              projects={visible}
+              refYear={refYear}
+              onPatch={handlePatch}
+              reorderable={reorderable}
+              onReorder={handleReorder}
+            />
           )}
         </>
       )}

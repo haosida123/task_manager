@@ -7,9 +7,10 @@ import {
   PRIORITY_LABEL,
 } from '../../lib/format';
 
-export type SortKey = 'updated' | 'priority' | 'progress' | 'name';
+export type SortKey = 'manual' | 'updated' | 'priority' | 'progress' | 'name';
 
 export const SORT_OPTIONS: { value: SortKey; label: string }[] = [
+  { value: 'manual', label: 'Custom order' },
   { value: 'updated', label: 'Recently updated' },
   { value: 'priority', label: 'Priority' },
   { value: 'progress', label: 'Progress' },

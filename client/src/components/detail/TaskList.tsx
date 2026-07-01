@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
+import type { DragEvent } from 'react';
 import type { Task, NewTask, TaskPatch, Priority, Effort } from '../../types';
 import {
   PRIORITY_OPTIONS,
@@ -21,11 +22,70 @@ interface TaskRowProps {
   task: Task;
   onPatch: (id: string, patch: TaskPatch) => void;
   onDelete: (id: string) => void;
+  reorderable?: boolean;
+  dragging?: boolean;
+  dropTarget?: boolean;
+  onDragStartRow?: () => void;
+  onDragOverRow?: () => void;
+  onDropRow?: () => void;
+  onDragEndRow?: () => void;
 }
 
-function TaskRow({ task, onPatch, onDelete }: TaskRowProps) {
+function TaskRow({
+  task,
+  onPatch,
+  onDelete,
+  reorderable,
+  dragging,
+  dropTarget,
+  onDragStartRow,
+  onDragOverRow,
+  onDropRow,
+  onDragEndRow,
+}: TaskRowProps) {
+  const rowRef = useRef<HTMLLIElement>(null);
+
+  function handleDragStart(e: DragEvent) {
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', task.id);
+    if (rowRef.current) e.dataTransfer.setDragImage(rowRef.current, 20, 16);
+    onDragStartRow?.();
+  }
+
   return (
-    <li className={`task-row ${task.done ? 'is-done' : ''}`}>
+    <li
+      ref={rowRef}
+      className={
+        `task-row ${task.done ? 'is-done' : ''}` +
+        `${dragging ? ' is-dragging' : ''}${dropTarget ? ' is-drop-target' : ''}`
+      }
+      onDragOver={(e) => {
+        if (reorderable) {
+          e.preventDefault();
+          onDragOverRow?.();
+        }
+      }}
+      onDrop={(e) => {
+        if (reorderable) {
+          e.preventDefault();
+          onDropRow?.();
+        }
+      }}
+    >
+      {reorderable && (
+        <button
+          type="button"
+          className="task-drag-handle"
+          aria-label="Drag to reorder"
+          title="Drag to reorder"
+          draggable
+          onDragStart={handleDragStart}
+          onDragEnd={onDragEndRow}
+        >
+          <Icon name="grip" size={14} />
+        </button>
+      )}
+
       <button
         type="button"
         className={`task-check ${task.done ? 'is-done' : ''}`}
@@ -82,13 +142,16 @@ interface TaskListProps {
   onAdd: (payload: NewTask) => void;
   onPatch: (id: string, patch: TaskPatch) => void;
   onDelete: (id: string) => void;
+  onReorder: (ids: string[]) => void;
 }
 
-export function TaskList({ tasks, onAdd, onPatch, onDelete }: TaskListProps) {
+export function TaskList({ tasks, onAdd, onPatch, onDelete, onReorder }: TaskListProps) {
   const [title, setTitle] = useState('');
   const [priority, setPriority] = useState<Priority>('medium');
   const [effort, setEffort] = useState<Effort>('medium');
   const [showDone, setShowDone] = useState(true);
+  const [dragId, setDragId] = useState<string | null>(null);
+  const [overId, setOverId] = useState<string | null>(null);
 
   const { open, done } = useMemo(() => {
     const sorted = [...tasks].sort((a, b) => a.order - b.order);
@@ -98,6 +161,23 @@ export function TaskList({ tasks, onAdd, onPatch, onDelete }: TaskListProps) {
     };
   }, [tasks]);
 
+  // Reordering applies to the open list; completed tasks keep their order at the end.
+  function commitDrop() {
+    if (dragId && overId && dragId !== overId) {
+      const ids = open.map((t) => t.id);
+      const from = ids.indexOf(dragId);
+      const to = ids.indexOf(overId);
+      if (from !== -1 && to !== -1) {
+        const next = [...ids];
+        next.splice(from, 1);
+        next.splice(to, 0, dragId);
+        onReorder([...next, ...done.map((t) => t.id)]);
+      }
+    }
+    setDragId(null);
+    setOverId(null);
+  }
+
   const submit = () => {
     const t = title.trim();
     if (!t) return;
@@ -106,6 +186,8 @@ export function TaskList({ tasks, onAdd, onPatch, onDelete }: TaskListProps) {
     setPriority('medium');
     setEffort('medium');
   };
+
+  const canReorder = open.length > 1;
 
   return (
     <section className="card task-list">
@@ -125,7 +207,24 @@ export function TaskList({ tasks, onAdd, onPatch, onDelete }: TaskListProps) {
       {open.length > 0 && (
         <ul className="task-rows">
           {open.map((task) => (
-            <TaskRow key={task.id} task={task} onPatch={onPatch} onDelete={onDelete} />
+            <TaskRow
+              key={task.id}
+              task={task}
+              onPatch={onPatch}
+              onDelete={onDelete}
+              reorderable={canReorder}
+              dragging={dragId === task.id}
+              dropTarget={overId === task.id && dragId !== null && dragId !== task.id}
+              onDragStartRow={() => setDragId(task.id)}
+              onDragOverRow={() => {
+                if (dragId && dragId !== task.id) setOverId(task.id);
+              }}
+              onDropRow={commitDrop}
+              onDragEndRow={() => {
+                setDragId(null);
+                setOverId(null);
+              }}
+            />
           ))}
         </ul>
       )}
