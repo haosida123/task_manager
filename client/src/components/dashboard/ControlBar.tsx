@@ -7,13 +7,14 @@ import {
   PRIORITY_LABEL,
 } from '../../lib/format';
 
-export type SortKey = 'manual' | 'updated' | 'priority' | 'progress' | 'name';
+export type SortKey = 'manual' | 'updated' | 'priority' | 'progress' | 'status' | 'name';
 
 export const SORT_OPTIONS: { value: SortKey; label: string }[] = [
   { value: 'manual', label: 'Custom order' },
   { value: 'updated', label: 'Recently updated' },
   { value: 'priority', label: 'Priority' },
   { value: 'progress', label: 'Progress' },
+  { value: 'status', label: 'Status' },
   { value: 'name', label: 'Name (A–Z)' },
 ];
 
@@ -24,11 +25,14 @@ interface ControlBarProps {
   area: string;
   sort: SortKey;
   areas: string[];
+  source: string;
+  sourceOpts: { value: string; label: string }[];
   onSearch: (v: string) => void;
   onStatus: (v: string) => void;
   onPriority: (v: string) => void;
   onArea: (v: string) => void;
   onSort: (v: SortKey) => void;
+  onSource: (v: string) => void;
   onReset: () => void;
 }
 
@@ -39,11 +43,14 @@ export function ControlBar({
   area,
   sort,
   areas,
+  source,
+  sourceOpts,
   onSearch,
   onStatus,
   onPriority,
   onArea,
   onSort,
+  onSource,
   onReset,
 }: ControlBarProps) {
   // "Undone" is a view over all not-done statuses (the default), not a status.
@@ -66,6 +73,16 @@ export function ControlBar({
 
   return (
     <div className="controlbar">
+      <div className="cb-field cb-field--source">
+        <span className="cb-cap">Ledger</span>
+        <Select
+          options={sourceOpts}
+          value={source}
+          onChange={(e) => onSource(e.target.value)}
+          aria-label="Data source"
+        />
+      </div>
+
       <div className="cb-search">
         <Icon name="search" size={15} className="icon-lead" />
         <TextInput

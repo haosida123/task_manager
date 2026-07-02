@@ -10,14 +10,28 @@ import { NewProjectModal } from '../components/dashboard/NewProjectModal';
 import { ExportModal } from '../components/dashboard/ExportModal';
 import { DataModal } from '../components/dashboard/DataModal';
 import { api } from '../api';
-import type { ProjectSummary, ProjectPatch } from '../types';
-import { PRIORITY_RANK } from '../lib/format';
+import type { ProjectSummary, ProjectPatch, DataSource } from '../types';
+import { PRIORITY_RANK, STATUS_RANK } from '../lib/format';
+import { Icon } from '../components/ui';
 import '../components/dashboard/dashboard.css';
 
 function matchesSearch(p: ProjectSummary, q: string): boolean {
   if (!q) return true;
   const hay = [p.name, p.area, ...p.tags, ...p.collaborators].join(' ').toLowerCase();
   return hay.includes(q);
+}
+
+// A friendly dropdown label for a data source (live / seed / a backup snapshot).
+function sourceLabel(s: DataSource): string {
+  if (s.kind === 'live') return `Live data (${s.count})`;
+  if (s.kind === 'seed') return `Default seed (${s.count})`;
+  const raw = (s.file || '').replace(/^db-/, '').replace(/\.json$/, '');
+  const tag = /-(preimport|prereset)$/.exec(raw)?.[1];
+  const stamp = tag ? raw.slice(0, raw.length - tag.length - 1) : raw;
+  const datePart = stamp.slice(0, 10);
+  const timePart = stamp.length > 10 ? ` ${stamp.slice(11, 16).replace('-', ':')}` : '';
+  const tagText = tag === 'preimport' ? ' · pre-import' : tag === 'prereset' ? ' · pre-reset' : '';
+  return `Backup ${datePart}${timePart}${tagText} (${s.count})`;
 }
 
 export default function Dashboard() {
@@ -35,22 +49,40 @@ export default function Dashboard() {
   const [exportOpen, setExportOpen] = useState(false);
   const [dataOpen, setDataOpen] = useState(false);
 
+  // Which ledger we're viewing: 'live' (editable) or a read-only seed/backup.
+  const [source, setSource] = useState('live');
+  const [sources, setSources] = useState<DataSource[]>([]);
+  const [restoring, setRestoring] = useState(false);
+  const readOnly = source !== 'live';
+
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const data = await api.listProjects();
+      const data = await api.listProjects(source);
       setProjects(data);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to load the portfolio.');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [source]);
 
   useEffect(() => {
     void load();
   }, [load]);
+
+  const loadSources = useCallback(async () => {
+    try {
+      setSources(await api.listSources());
+    } catch {
+      /* the switcher just falls back to Live-only */
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadSources();
+  }, [loadSources]);
 
   // Replace a single project in state with the record returned by a mutation.
   const handlePatch = useCallback(async (id: string, patch: ProjectPatch) => {
@@ -120,6 +152,35 @@ export default function Dashboard() {
     [projects],
   );
 
+  // Options for the "Ledger" source switcher. Always include a Live entry so the
+  // switcher is usable even before /api/sources resolves.
+  const sourceOpts = useMemo(() => {
+    if (sources.length === 0) return [{ value: 'live', label: 'Live data' }];
+    return sources.map((s) => ({ value: s.id, label: sourceLabel(s) }));
+  }, [sources]);
+
+  const activeSourceLabel = useMemo(() => {
+    const s = sources.find((x) => x.id === source);
+    return s ? sourceLabel(s) : source;
+  }, [sources, source]);
+
+  // Overwrite the live db with the currently-previewed snapshot, then return to
+  // the (now updated) live view. A pre-restore backup is taken automatically.
+  const restoreCurrent = useCallback(async () => {
+    if (source === 'live') return;
+    setRestoring(true);
+    setError(null);
+    try {
+      await api.restoreSource(source);
+      setSource('live');
+      await loadSources();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not restore this snapshot.');
+    } finally {
+      setRestoring(false);
+    }
+  }, [source, loadSources]);
+
   const visible = useMemo(() => {
     const q = search.trim().toLowerCase();
     const filtered = projects.filter(
@@ -140,6 +201,10 @@ export default function Dashboard() {
         }
         case 'progress':
           return b.progress - a.progress;
+        case 'status': {
+          const d = STATUS_RANK[a.status] - STATUS_RANK[b.status];
+          return d !== 0 ? d : b.updatedAt.localeCompare(a.updatedAt);
+        }
         case 'name':
           return a.name.localeCompare(b.name);
         case 'updated':
@@ -162,7 +227,10 @@ export default function Dashboard() {
   // still allows it — hidden done items are appended by handleReorder.
   const otherFiltersActive = search.trim() !== '' || priority !== 'all' || area !== 'all';
   const reorderable =
-    sort === 'manual' && !otherFiltersActive && (status === 'undone' || status === 'all');
+    !readOnly &&
+    sort === 'manual' &&
+    !otherFiltersActive &&
+    (status === 'undone' || status === 'all');
 
   const subtitle = loading
     ? 'Loading portfolio…'
@@ -180,10 +248,21 @@ export default function Dashboard() {
           <Button icon="database" onClick={() => setDataOpen(true)}>
             Data
           </Button>
-          <Button icon="archive" onClick={() => setExportOpen(true)}>
+          <Button
+            icon="archive"
+            onClick={() => setExportOpen(true)}
+            disabled={readOnly}
+            title={readOnly ? 'Switch to Live data to export' : undefined}
+          >
             Export
           </Button>
-          <Button variant="primary" icon="plus" onClick={() => setModalOpen(true)}>
+          <Button
+            variant="primary"
+            icon="plus"
+            onClick={() => setModalOpen(true)}
+            disabled={readOnly}
+            title={readOnly ? 'Switch to Live data to add projects' : undefined}
+          >
             New project
           </Button>
         </div>
@@ -218,23 +297,54 @@ export default function Dashboard() {
             area={area}
             sort={sort}
             areas={areas}
+            source={source}
+            sourceOpts={sourceOpts}
             onSearch={setSearch}
             onStatus={setStatus}
             onPriority={setPriority}
             onArea={setArea}
             onSort={setSort}
+            onSource={setSource}
             onReset={resetFilters}
           />
 
+          {readOnly && (
+            <div className="ledger-preview" role="status">
+              <Icon name="clock" size={15} className="ledger-preview__icon" />
+              <span className="ledger-preview__text">
+                Viewing <strong>{activeSourceLabel}</strong> — read-only snapshot. Edits are
+                disabled.
+              </span>
+              <span className="ledger-preview__actions">
+                <Button
+                  variant="ghost"
+                  icon="reset"
+                  onClick={() => void restoreCurrent()}
+                  disabled={restoring}
+                  title="Overwrite the live data with this snapshot (a pre-restore backup is kept)"
+                >
+                  {restoring ? 'Restoring…' : 'Restore this version'}
+                </Button>
+                <Button variant="primary" icon="database" onClick={() => setSource('live')}>
+                  Back to live
+                </Button>
+              </span>
+            </div>
+          )}
+
           {projects.length === 0 ? (
             <div className="card dash-state">
-              <h3 className="serif">No projects yet</h3>
+              <h3 className="serif">{readOnly ? 'This snapshot is empty' : 'No projects yet'}</h3>
               <p className="muted">
-                Start your ledger by adding the first research project.
+                {readOnly
+                  ? 'There are no projects in this backup.'
+                  : 'Start your ledger by adding the first research project.'}
               </p>
-              <Button variant="primary" icon="plus" onClick={() => setModalOpen(true)}>
-                New project
-              </Button>
+              {!readOnly && (
+                <Button variant="primary" icon="plus" onClick={() => setModalOpen(true)}>
+                  New project
+                </Button>
+              )}
             </div>
           ) : (
             <ProjectTable
@@ -244,6 +354,8 @@ export default function Dashboard() {
               onSummaryPatch={handleSummaryPatch}
               reorderable={reorderable}
               onReorder={handleReorder}
+              readOnly={readOnly}
+              source={source}
             />
           )}
         </>
@@ -264,9 +376,12 @@ export default function Dashboard() {
       <DataModal
         open={dataOpen}
         onClose={() => setDataOpen(false)}
+        onBackedUp={() => void loadSources()}
         onImported={() => {
           setDataOpen(false);
+          setSource('live');
           void load();
+          void loadSources();
         }}
       />
     </div>

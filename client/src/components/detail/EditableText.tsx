@@ -13,6 +13,7 @@ interface EditableTextProps {
   inputClassName?: string; // extra classes for the input/textarea
   ariaLabel?: string;
   trimOnCommit?: boolean;
+  readOnly?: boolean; // render as plain, non-editable text
 }
 
 // Small click-to-edit text helper. Click (or Enter/Space) turns the display
@@ -29,6 +30,7 @@ export function EditableText({
   inputClassName = '',
   ariaLabel,
   trimOnCommit = true,
+  readOnly = false,
 }: EditableTextProps) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(value);
@@ -59,6 +61,20 @@ export function EditableText({
     setEditing(false);
     setDraft(value);
   };
+
+  // Read-only: render the value (or a muted placeholder) as plain text.
+  if (readOnly) {
+    const ROTag = tag;
+    const blank = value.trim().length === 0;
+    const cls = ['editable', 'is-readonly', multiline ? 'editable--multiline' : '', blank ? 'editable--empty' : '', className]
+      .filter(Boolean)
+      .join(' ');
+    return (
+      <ROTag className={cls} aria-label={ariaLabel}>
+        {blank ? emptyText : value}
+      </ROTag>
+    );
+  }
 
   if (editing) {
     const shared = {

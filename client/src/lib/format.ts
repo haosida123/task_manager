@@ -29,9 +29,17 @@ export const UNDONE_FILTER = 'undone';
 export const PRIORITY_OPTIONS: Priority[] = ['high', 'medium', 'low'];
 export const EFFORT_OPTIONS: Effort[] = ['high', 'medium', 'low'];
 
-// Rank helpers so callers can sort by priority/effort weight.
+// Rank helpers so callers can sort by priority/effort/status weight.
 export const PRIORITY_RANK: Record<Priority, number> = { high: 0, medium: 1, low: 2 };
 export const EFFORT_RANK: Record<Effort, number> = { high: 0, medium: 1, low: 2 };
+// Workflow-ish ordering: active work first, done last.
+export const STATUS_RANK: Record<Status, number> = {
+  active: 0,
+  planning: 1,
+  in_review: 2,
+  on_hold: 3,
+  done: 4,
+};
 
 const MONTHS = [
   'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',

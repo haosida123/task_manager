@@ -12,6 +12,9 @@ interface ProjectTableProps {
   onSummaryPatch: (id: string, patch: Partial<ProjectSummary>) => void;
   reorderable: boolean;
   onReorder: (ids: string[]) => void;
+  /** When set, the ledger shows a read-only snapshot from this source id. */
+  readOnly?: boolean;
+  source?: string;
 }
 
 export function ProjectTable({
@@ -21,6 +24,8 @@ export function ProjectTable({
   onSummaryPatch,
   reorderable,
   onReorder,
+  readOnly = false,
+  source = 'live',
 }: ProjectTableProps) {
   const [dragId, setDragId] = useState<string | null>(null);
   const [overId, setOverId] = useState<string | null>(null);
@@ -76,11 +81,13 @@ export function ProjectTable({
         <div className="ledger__body">
           {projects.map((p) => (
             <ProjectRow
-              key={p.id}
+              key={`${source}:${p.id}`}
               project={p}
               refYear={refYear}
               onPatch={onPatch}
               onSummaryPatch={onSummaryPatch}
+              readOnly={readOnly}
+              source={source}
               reorderable={reorderable}
               dragging={dragId === p.id}
               dropTarget={reorderable && overId === p.id && dragId !== null && dragId !== p.id}

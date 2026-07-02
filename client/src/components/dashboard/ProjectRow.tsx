@@ -51,6 +51,10 @@ interface ProjectRowProps {
   /** Merge derived summary fields (next steps, latest update…) back into the
    *  dashboard list after edits made inside the expanded panel. */
   onSummaryPatch: (id: string, patch: Partial<ProjectSummary>) => void;
+  /** Read-only preview (viewing the seed or a backup snapshot). */
+  readOnly?: boolean;
+  /** Data source id to load the expanded detail from (default 'live'). */
+  source?: string;
   reorderable: boolean;
   dragging: boolean;
   dropTarget: boolean;
@@ -88,6 +92,8 @@ export function ProjectRow({
   refYear,
   onPatch,
   onSummaryPatch,
+  readOnly = false,
+  source = 'live',
   reorderable,
   dragging,
   dropTarget,
@@ -123,7 +129,7 @@ export function ProjectRow({
     setDetailLoading(true);
     setDetailErr(null);
     api
-      .getProject(project.id)
+      .getProject(project.id, source)
       .then((d) => {
         if (!cancelled) setDetail(d);
       })
@@ -318,18 +324,20 @@ export function ProjectRow({
         {/* project */}
         <div className="col-project">
           <div className="proj-title">
-            <button
-              type="button"
-              className={`btn btn--icon proj-pin${project.pinned ? ' is-pinned' : ''}`}
-              aria-label={project.pinned ? 'Unpin project' : 'Pin project'}
-              title={project.pinned ? 'Unpin' : 'Pin to top'}
-              onClick={(e) => {
-                stop(e);
-                void patch({ pinned: !project.pinned });
-              }}
-            >
-              <Icon name="pin" size={13} />
-            </button>
+            {!readOnly && (
+              <button
+                type="button"
+                className={`btn btn--icon proj-pin${project.pinned ? ' is-pinned' : ''}`}
+                aria-label={project.pinned ? 'Unpin project' : 'Pin project'}
+                title={project.pinned ? 'Unpin' : 'Pin to top'}
+                onClick={(e) => {
+                  stop(e);
+                  void patch({ pinned: !project.pinned });
+                }}
+              >
+                <Icon name="pin" size={13} />
+              </button>
+            )}
             <Link
               to={projectPath}
               className="proj-name link-plain"
@@ -347,6 +355,7 @@ export function ProjectRow({
                 value={project.area}
                 emptyText="Add area…"
                 ariaLabel="Project area"
+                readOnly={readOnly}
                 onCommit={(v) => void patch({ area: v })}
               />
             </span>
@@ -362,35 +371,47 @@ export function ProjectRow({
 
         {/* priority */}
         <div className="col-priority" onClick={stop}>
-          <BadgeSelect
-            value={project.priority}
-            options={PRIORITY_MENU}
-            onChange={(v) => void patch({ priority: v })}
-            renderBadge={(v) => <PriorityBadge value={v} />}
-            ariaLabel="Change priority"
-          />
+          {readOnly ? (
+            <PriorityBadge value={project.priority} />
+          ) : (
+            <BadgeSelect
+              value={project.priority}
+              options={PRIORITY_MENU}
+              onChange={(v) => void patch({ priority: v })}
+              renderBadge={(v) => <PriorityBadge value={v} />}
+              ariaLabel="Change priority"
+            />
+          )}
         </div>
 
         {/* effort */}
         <div className="col-effort" onClick={stop}>
-          <BadgeSelect
-            value={project.effort}
-            options={EFFORT_MENU}
-            onChange={(v) => void patch({ effort: v })}
-            renderBadge={(v) => <EffortBadge value={v} />}
-            ariaLabel="Change effort"
-          />
+          {readOnly ? (
+            <EffortBadge value={project.effort} />
+          ) : (
+            <BadgeSelect
+              value={project.effort}
+              options={EFFORT_MENU}
+              onChange={(v) => void patch({ effort: v })}
+              renderBadge={(v) => <EffortBadge value={v} />}
+              ariaLabel="Change effort"
+            />
+          )}
         </div>
 
         {/* progress */}
         <div className="col-progress">
-          <div className="cell-edit" onClick={stop} onKeyDown={(e) => e.stopPropagation()}>
-            <ProgressBar
-              value={project.progress}
-              editable
-              onCommit={(v) => void patch({ progress: v })}
-            />
-          </div>
+          {readOnly ? (
+            <ProgressBar value={project.progress} showLabel />
+          ) : (
+            <div className="cell-edit" onClick={stop} onKeyDown={(e) => e.stopPropagation()}>
+              <ProgressBar
+                value={project.progress}
+                editable
+                onCommit={(v) => void patch({ progress: v })}
+              />
+            </div>
+          )}
         </div>
 
         {/* latest update */}
@@ -431,13 +452,17 @@ export function ProjectRow({
 
         {/* status */}
         <div className="col-status" onClick={stop}>
-          <BadgeSelect
-            value={project.status}
-            options={STATUS_MENU}
-            onChange={(v) => void patch({ status: v })}
-            renderBadge={(v) => <StatusBadge value={v} />}
-            ariaLabel="Change status"
-          />
+          {readOnly ? (
+            <StatusBadge value={project.status} />
+          ) : (
+            <BadgeSelect
+              value={project.status}
+              options={STATUS_MENU}
+              onChange={(v) => void patch({ status: v })}
+              renderBadge={(v) => <StatusBadge value={v} />}
+              ariaLabel="Change status"
+            />
+          )}
         </div>
       </div>
 
@@ -454,6 +479,7 @@ export function ProjectRow({
                   value={project.description}
                   emptyText="Add a short description…"
                   ariaLabel="Project description"
+                  readOnly={readOnly}
                   onCommit={(v) => void patch({ description: v })}
                 />
               </div>
@@ -472,36 +498,47 @@ export function ProjectRow({
                       <ul className="psteps">
                         {openTasks.map((t) => (
                           <li className="pstep" key={t.id}>
-                            <button
-                              type="button"
-                              className="pstep__check"
-                              aria-label="Mark step complete"
-                              title="Mark complete"
-                              onClick={() => void toggleTaskDone(t)}
-                            />
+                            {readOnly ? (
+                              <span className="pstep__check is-static" aria-hidden="true" />
+                            ) : (
+                              <button
+                                type="button"
+                                className="pstep__check"
+                                aria-label="Mark step complete"
+                                title="Mark complete"
+                                onClick={() => void toggleTaskDone(t)}
+                              />
+                            )}
                             <EditableText
                               tag="span"
                               className="pstep__title grow"
                               value={t.title}
                               emptyText="Untitled step"
                               ariaLabel="Step title"
+                              readOnly={readOnly}
                               onCommit={(v) => v && void editTaskTitle(t, v)}
                             />
-                            <BadgeSelect
-                              value={t.priority}
-                              options={PRIORITY_MENU}
-                              onChange={(v) => void patchTaskField(t, { priority: v })}
-                              renderBadge={(v) => <PriorityBadge value={v} />}
-                              ariaLabel="Change step priority"
-                              className="pstep__badge"
-                            />
-                            <IconButton
-                              icon="trash"
-                              size={14}
-                              label="Delete step"
-                              className="pstep__del"
-                              onClick={() => void deleteTask(t)}
-                            />
+                            {readOnly ? (
+                              <PriorityBadge value={t.priority} />
+                            ) : (
+                              <BadgeSelect
+                                value={t.priority}
+                                options={PRIORITY_MENU}
+                                onChange={(v) => void patchTaskField(t, { priority: v })}
+                                renderBadge={(v) => <PriorityBadge value={v} />}
+                                ariaLabel="Change step priority"
+                                className="pstep__badge"
+                              />
+                            )}
+                            {!readOnly && (
+                              <IconButton
+                                icon="trash"
+                                size={14}
+                                label="Delete step"
+                                className="pstep__del"
+                                onClick={() => void deleteTask(t)}
+                              />
+                            )}
                           </li>
                         ))}
                       </ul>
@@ -509,22 +546,24 @@ export function ProjectRow({
                       <span className="muted small">No open next steps.</span>
                     )}
 
-                    <form
-                      className="pstep-add"
-                      onSubmit={(e) => {
-                        e.preventDefault();
-                        void addStep();
-                      }}
-                    >
-                      <input
-                        className="input grow"
-                        placeholder="Add a next step…"
-                        aria-label="New next step"
-                        value={newStep}
-                        onChange={(e) => setNewStep(e.target.value)}
-                      />
-                      <IconButton icon="plus" label="Add step" type="submit" disabled={!newStep.trim()} />
-                    </form>
+                    {!readOnly && (
+                      <form
+                        className="pstep-add"
+                        onSubmit={(e) => {
+                          e.preventDefault();
+                          void addStep();
+                        }}
+                      >
+                        <input
+                          className="input grow"
+                          placeholder="Add a next step…"
+                          aria-label="New next step"
+                          value={newStep}
+                          onChange={(e) => setNewStep(e.target.value)}
+                        />
+                        <IconButton icon="plus" label="Add step" type="submit" disabled={!newStep.trim()} />
+                      </form>
+                    )}
 
                     {doneTasks.length > 0 && (
                       <div className="pdone">
@@ -540,23 +579,31 @@ export function ProjectRow({
                           <ul className="psteps psteps--done">
                             {doneTasks.map((t) => (
                               <li className="pstep is-done" key={t.id}>
-                                <button
-                                  type="button"
-                                  className="pstep__check is-done"
-                                  aria-label="Mark step not complete"
-                                  title="Mark not complete"
-                                  onClick={() => void toggleTaskDone(t)}
-                                >
-                                  <Icon name="check" size={11} />
-                                </button>
+                                {readOnly ? (
+                                  <span className="pstep__check is-done is-static">
+                                    <Icon name="check" size={11} />
+                                  </span>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    className="pstep__check is-done"
+                                    aria-label="Mark step not complete"
+                                    title="Mark not complete"
+                                    onClick={() => void toggleTaskDone(t)}
+                                  >
+                                    <Icon name="check" size={11} />
+                                  </button>
+                                )}
                                 <span className="pstep__title grow">{t.title}</span>
-                                <IconButton
-                                  icon="trash"
-                                  size={14}
-                                  label="Delete step"
-                                  className="pstep__del"
-                                  onClick={() => void deleteTask(t)}
-                                />
+                                {!readOnly && (
+                                  <IconButton
+                                    icon="trash"
+                                    size={14}
+                                    label="Delete step"
+                                    className="pstep__del"
+                                    onClick={() => void deleteTask(t)}
+                                  />
+                                )}
                               </li>
                             ))}
                           </ul>
@@ -569,52 +616,54 @@ export function ProjectRow({
             </div>
 
             <aside className="panel-side">
-              <div className="panel-block panel-block--first">
-                <span className="panel-cap">Log an update</span>
-                <form
-                  className="panel-log"
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    void submitLog();
-                  }}
-                >
-                  <textarea
-                    className="textarea"
-                    placeholder="What moved forward? Results, blockers, decisions…"
-                    aria-label="New update"
-                    value={logBody}
-                    onChange={(e) => setLogBody(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
-                        e.preventDefault();
-                        void submitLog();
-                      }
+              {!readOnly && (
+                <div className="panel-block panel-block--first">
+                  <span className="panel-cap">Log an update</span>
+                  <form
+                    className="panel-log"
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      void submitLog();
                     }}
-                  />
-                  <div className="panel-log__row">
-                    <div className="row gap-6">
-                      <Icon name="calendar" size={14} className="muted" />
-                      <input
-                        type="date"
-                        className="input"
-                        aria-label="Update date"
-                        value={logDate}
-                        onChange={(e) => setLogDate(e.target.value)}
-                      />
+                  >
+                    <textarea
+                      className="textarea"
+                      placeholder="What moved forward? Results, blockers, decisions…"
+                      aria-label="New update"
+                      value={logBody}
+                      onChange={(e) => setLogBody(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+                          e.preventDefault();
+                          void submitLog();
+                        }
+                      }}
+                    />
+                    <div className="panel-log__row">
+                      <div className="row gap-6">
+                        <Icon name="calendar" size={14} className="muted" />
+                        <input
+                          type="date"
+                          className="input"
+                          aria-label="Update date"
+                          value={logDate}
+                          onChange={(e) => setLogDate(e.target.value)}
+                        />
+                      </div>
+                      <button
+                        type="submit"
+                        className="btn btn--primary btn--sm"
+                        disabled={!logBody.trim()}
+                      >
+                        <Icon name="plus" size={13} /> Log
+                      </button>
                     </div>
-                    <button
-                      type="submit"
-                      className="btn btn--primary btn--sm"
-                      disabled={!logBody.trim()}
-                    >
-                      <Icon name="plus" size={13} /> Log
-                    </button>
-                  </div>
-                </form>
-              </div>
+                  </form>
+                </div>
+              )}
 
               {recentUpdates.length > 0 && (
-                <div className="panel-block">
+                <div className={`panel-block${readOnly ? ' panel-block--first' : ''}`}>
                   <span className="panel-cap">Recent log</span>
                   <ul className="precent">
                     {recentUpdates.map((u) => (
@@ -631,7 +680,11 @@ export function ProjectRow({
               )}
 
               <div className="panel-foot">
-                {err ? (
+                {readOnly ? (
+                  <span className="row gap-6 tiny panel-saving">
+                    <Icon name="clock" size={13} /> Read-only snapshot
+                  </span>
+                ) : err ? (
                   <span className="panel-err">{err}</span>
                 ) : saving ? (
                   <span className="row gap-6 tiny panel-saving">
@@ -640,9 +693,11 @@ export function ProjectRow({
                 ) : (
                   <span className="tiny panel-saving">Saved locally</span>
                 )}
-                <Link to={projectPath} className="panel-open">
-                  Open full project →
-                </Link>
+                {!readOnly && (
+                  <Link to={projectPath} className="panel-open">
+                    Open full project →
+                  </Link>
+                )}
               </div>
             </aside>
           </div>

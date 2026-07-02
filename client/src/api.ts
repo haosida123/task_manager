@@ -14,9 +14,20 @@ import type {
   ExportData,
   BackupData,
   ImportResult,
+  BackupResult,
+  DataSource,
+  Settings,
+  SettingsResult,
 } from './types';
 
 const BASE = '/api';
+
+// Append a read-only `?source=` param (seed / backup preview); 'live' is the default.
+function withSource(path: string, source?: string): string {
+  if (!source || source === 'live') return path;
+  const sep = path.includes('?') ? '&' : '?';
+  return `${path}${sep}source=${encodeURIComponent(source)}`;
+}
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {
@@ -39,8 +50,10 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 
 export const api = {
   // projects
-  listProjects: () => request<ProjectSummary[]>('/projects'),
-  getProject: (id: string) => request<ProjectDetail>(`/projects/${id}`),
+  listProjects: (source?: string) =>
+    request<ProjectSummary[]>(withSource('/projects', source)),
+  getProject: (id: string, source?: string) =>
+    request<ProjectDetail>(withSource(`/projects/${id}`, source)),
   createProject: (body: NewProject) =>
     request<ProjectSummary>('/projects', { method: 'POST', body: JSON.stringify(body) }),
   updateProject: (id: string, body: ProjectPatch) =>
@@ -73,9 +86,20 @@ export const api = {
   getExport: () => request<ExportData>('/export'),
   xlsxUrl: '/api/export.xlsx',
 
+  // settings (stored in the database)
+  getSettings: () => request<SettingsResult>('/settings'),
+  updateSettings: (patch: Partial<Settings>) =>
+    request<SettingsResult>('/settings', { method: 'PATCH', body: JSON.stringify(patch) }),
+
+  // data sources (read-only preview of seed / backups)
+  listSources: () => request<DataSource[]>('/sources'),
+  restoreSource: (source: string) =>
+    request<ImportResult>('/restore', { method: 'POST', body: JSON.stringify({ source }) }),
+
   // backup / restore (full data)
   getBackup: () => request<BackupData>('/backup'),
   backupUrl: '/api/backup',
+  createBackup: () => request<BackupResult>('/backup', { method: 'POST' }),
   importData: (data: BackupData) =>
     request<ImportResult>('/import', { method: 'POST', body: JSON.stringify(data) }),
 };

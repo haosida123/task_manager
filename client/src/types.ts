@@ -144,3 +144,34 @@ export interface ImportResult {
   tasks: number;
   updates: number;
 }
+
+// GET/PATCH /api/settings — configuration stored inside the database.
+export interface Settings {
+  backupDir: string | null;
+}
+
+export interface FolderStatus {
+  configured: boolean;
+  exists: boolean;
+  writable: boolean;
+}
+
+export interface SettingsResult extends Settings {
+  folder: FolderStatus;
+}
+
+// POST /api/backup — result of an on-demand snapshot.
+export interface BackupResult {
+  ok: true;
+  file: string;
+  external: { ok: boolean; path?: string; error?: string } | null;
+}
+
+// GET /api/sources — a read-only data source the ledger can preview.
+export interface DataSource {
+  id: string; // 'live' | 'seed' | 'backup:<file>'
+  kind: 'live' | 'seed' | 'backup';
+  file?: string | null;
+  savedAt?: string | null; // ISO timestamp for backups
+  count: number; // number of projects in the source
+}

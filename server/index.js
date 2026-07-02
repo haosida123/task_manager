@@ -3,7 +3,21 @@ const path = require('path');
 const express = require('express');
 const cors = require('cors');
 const XLSX = require('xlsx');
-const { load, persist, reset, replaceAll, id, now } = require('./db');
+const {
+  load,
+  persist,
+  reset,
+  replaceAll,
+  backupNow,
+  backupToDir,
+  listSources,
+  readSource,
+  getSettings,
+  updateSettings,
+  dirStatus,
+  id,
+  now,
+} = require('./db');
 
 const app = express();
 app.use(cors());
@@ -55,7 +69,9 @@ function findProject(db, id) {
 // ---- project routes --------------------------------------------------------
 
 app.get('/api/projects', (req, res) => {
-  const db = load();
+  // `?source=` previews the seed or a backup snapshot read-only; default = live.
+  const db = readSource(req.query.source);
+  if (!db) return res.status(404).json({ error: 'Unknown data source' });
   const list = db.projects
     .slice()
     .sort((a, b) => {
@@ -109,7 +125,8 @@ app.post('/api/projects/reorder', (req, res) => {
 });
 
 app.get('/api/projects/:id', (req, res) => {
-  const db = load();
+  const db = readSource(req.query.source);
+  if (!db) return res.status(404).json({ error: 'Unknown data source' });
   const project = findProject(db, req.params.id);
   if (!project) return res.status(404).json({ error: 'Project not found' });
   const tasks = db.tasks
@@ -276,7 +293,65 @@ app.post('/api/reset', (req, res) => {
 
 app.get('/api/health', (req, res) => res.json({ ok: true }));
 
+// ---- data sources (read-only preview of seed / backups) --------------------
+
+// List the sources the ledger can switch to: live, default seed, and backups.
+app.get('/api/sources', (req, res) => {
+  res.json(listSources());
+});
+
+// Restore the live db from a preview source (seed or a backup snapshot).
+// Destructive: replaces ALL live data (replaceAll snapshots the current data
+// first so this is itself undoable).
+app.post('/api/restore', (req, res) => {
+  const source = req.body && req.body.source;
+  if (!source || source === 'live') {
+    return res.status(400).json({ error: 'Choose a seed or backup snapshot to restore from.' });
+  }
+  const src = readSource(source);
+  if (!src) return res.status(404).json({ error: 'Unknown data source' });
+  const db = replaceAll(src);
+  res.json({
+    ok: true,
+    projects: db.projects.length,
+    tasks: db.tasks.length,
+    updates: db.updates.length,
+  });
+});
+
 // ---- backup / restore (full, round-trippable data) -------------------------
+
+// Read/update settings stored inside the database (e.g. the backup folder).
+app.get('/api/settings', (req, res) => {
+  const settings = getSettings();
+  res.json({ ...settings, folder: dirStatus(settings.backupDir) });
+});
+
+app.patch('/api/settings', (req, res) => {
+  const body = req.body || {};
+  const patch = {};
+  if ('backupDir' in body) {
+    const v = body.backupDir;
+    if (v !== null && typeof v !== 'string') {
+      return res.status(400).json({ error: 'backupDir must be a folder path string, or null to clear it.' });
+    }
+    patch.backupDir = v && v.trim() ? v.trim() : null;
+  }
+  const settings = updateSettings(patch);
+  res.json({ ...settings, folder: dirStatus(settings.backupDir) });
+});
+
+// Create an on-demand local snapshot in data/backups/ (also appears in the
+// ledger source switcher and can be restored from there). If a backup folder
+// is configured, a copy is also written there (e.g. a cloud-synced folder).
+app.post('/api/backup', (req, res) => {
+  load();
+  const file = backupNow('manual');
+  if (!file) return res.status(500).json({ error: 'Could not write a backup snapshot.' });
+  const backupDir = getSettings().backupDir;
+  const external = backupDir ? backupToDir(backupDir) : null;
+  res.json({ ok: true, file, external });
+});
 
 // Raw, re-importable snapshot of the whole database.
 app.get('/api/backup', (req, res) => {
