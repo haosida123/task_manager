@@ -46,8 +46,10 @@ export function ControlBar({
   onSort,
   onReset,
 }: ControlBarProps) {
+  // "Undone" is a view over all not-done statuses (the default), not a status.
   const statusOpts = [
     { value: 'all', label: 'All statuses' },
+    { value: 'undone', label: 'Undone (not done)' },
     ...STATUS_OPTIONS.map((s) => ({ value: s, label: STATUS_LABEL[s] })),
   ];
   const priorityOpts = [
@@ -60,7 +62,7 @@ export function ControlBar({
   ];
 
   const dirty =
-    search.trim() !== '' || status !== 'all' || priority !== 'all' || area !== 'all';
+    search.trim() !== '' || status !== 'undone' || priority !== 'all' || area !== 'all';
 
   return (
     <div className="controlbar">

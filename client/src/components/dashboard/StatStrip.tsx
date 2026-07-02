@@ -3,7 +3,7 @@
 
 interface StatStripProps {
   total: number;
-  active: number;
+  undone: number;
   highPriority: number;
   avgProgress: number; // 0-100
   openTasks: number;
@@ -16,10 +16,10 @@ interface Figure {
   accent?: boolean;
 }
 
-export function StatStrip({ total, active, highPriority, avgProgress, openTasks }: StatStripProps) {
+export function StatStrip({ total, undone, highPriority, avgProgress, openTasks }: StatStripProps) {
   const figures: Figure[] = [
     { label: 'Projects', value: String(total) },
-    { label: 'Active', value: String(active) },
+    { label: 'Undone', value: String(undone) },
     { label: 'High priority', value: String(highPriority) },
     { label: 'Avg progress', value: String(avgProgress), unit: '%', accent: true },
     { label: 'Open tasks', value: String(openTasks) },

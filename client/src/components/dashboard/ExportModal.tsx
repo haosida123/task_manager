@@ -10,7 +10,9 @@ import {
   copyTable,
   copyText,
   downloadBlob,
+  ALL_FIELDS,
 } from '../../lib/export';
+import type { ExportFields } from '../../lib/export';
 
 type Tab = 'table' | 'text' | 'excel';
 
@@ -53,6 +55,7 @@ export function ExportModal({ open, onClose, projectIds }: ExportModalProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>('table');
+  const [fields, setFields] = useState<ExportFields>(ALL_FIELDS);
 
   useEffect(() => {
     if (!open) return;
@@ -73,14 +76,21 @@ export function ExportModal({ open, onClose, projectIds }: ExportModalProps) {
     return projectIds.map((id) => byId.get(id)).filter((p): p is ExportProject => Boolean(p));
   }, [data, projectIds]);
 
-  const tableHtml = useMemo(() => toHtmlTable(projects), [projects]);
-  const plain = useMemo(() => toPlainText(projects), [projects]);
+  const tableHtml = useMemo(() => toHtmlTable(projects, fields), [projects, fields]);
+  const plain = useMemo(() => toPlainText(projects, fields), [projects, fields]);
   const stamp = (data?.generatedAt || new Date().toISOString()).slice(0, 10);
 
   const tabs: { key: Tab; label: string; icon: string }[] = [
     { key: 'table', label: 'Table', icon: 'layers' },
     { key: 'text', label: 'Text', icon: 'book' },
     { key: 'excel', label: 'Excel / CSV', icon: 'archive' },
+  ];
+
+  const FIELD_TOGGLES: { key: keyof ExportFields; label: string }[] = [
+    { key: 'priority', label: 'Priority' },
+    { key: 'effort', label: 'Effort' },
+    { key: 'progress', label: 'Progress' },
+    { key: 'status', label: 'Status' },
   ];
 
   return (
@@ -104,6 +114,22 @@ export function ExportModal({ open, onClose, projectIds }: ExportModalProps) {
           </span>
         </div>
 
+        {(tab === 'table' || tab === 'text') && (
+          <div className="export__fields">
+            <span className="tiny muted">Include:</span>
+            {FIELD_TOGGLES.map((f) => (
+              <label key={f.key} className="export__field">
+                <input
+                  type="checkbox"
+                  checked={fields[f.key]}
+                  onChange={(e) => setFields((prev) => ({ ...prev, [f.key]: e.target.checked }))}
+                />
+                {f.label}
+              </label>
+            ))}
+          </div>
+        )}
+
         {loading && <LoadingBlock label="Building export…" />}
         {!loading && error && <p className="export__error">{error}</p>}
 
@@ -119,8 +145,8 @@ export function ExportModal({ open, onClose, projectIds }: ExportModalProps) {
                   <div dangerouslySetInnerHTML={{ __html: tableHtml }} />
                 </div>
                 <div className="export__actions">
-                  <CopyButton label="Copy table" onCopy={() => copyTable(projects)} />
-                  <Button icon="layers" onClick={() => void copyText(toTSV(projects))}>
+                  <CopyButton label="Copy table" onCopy={() => copyTable(projects, fields)} />
+                  <Button icon="layers" onClick={() => void copyText(toTSV(projects, fields))}>
                     Copy as TSV
                   </Button>
                 </div>
@@ -165,7 +191,8 @@ export function ExportModal({ open, onClose, projectIds }: ExportModalProps) {
                 </div>
                 <p className="tiny faint" style={{ marginTop: 12 }}>
                   The .xlsx always contains the full portfolio; .csv follows the projects
-                  shown here.
+                  shown here. Both include every column — use the Table or Text tab to pick
+                  which columns to include.
                 </p>
               </div>
             )}

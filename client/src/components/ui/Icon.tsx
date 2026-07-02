@@ -25,6 +25,9 @@ const PATHS: Record<string, JSX.Element> = {
   gauge: <path d="M12 22a10 10 0 100-20 10 10 0 000 20zM12 12l4-3" />,
   archive: <path d="M3 4h18v4H3zM5 8v12h14V8M10 12h4" />,
   reset: <path d="M3 12a9 9 0 109-9 9 9 0 00-7 3.3M3 3v3.3h3.3" />,
+  download: <path d="M12 3v12M7 10l5 5 5-5M5 21h14" />,
+  upload: <path d="M12 21V9M7 14l5-5 5 5M5 3h14" />,
+  database: <path d="M12 3c4.4 0 8 1.3 8 3s-3.6 3-8 3-8-1.3-8-3 3.6-3 8-3zM4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3" />,
   grip: (
     <g fill="currentColor" stroke="none">
       <circle cx="9" cy="5" r="1.4" />

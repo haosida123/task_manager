@@ -22,6 +22,10 @@ export const EFFORT_LABEL: Record<Effort, string> = {
 };
 
 export const STATUS_OPTIONS: Status[] = ['active', 'planning', 'in_review', 'on_hold', 'done'];
+
+// "Undone" is a filter/view — every status except done. It is NOT a status a
+// project can be set to; it just groups all not-done work (the default view).
+export const UNDONE_FILTER = 'undone';
 export const PRIORITY_OPTIONS: Priority[] = ['high', 'medium', 'low'];
 export const EFFORT_OPTIONS: Effort[] = ['high', 'medium', 'low'];
 

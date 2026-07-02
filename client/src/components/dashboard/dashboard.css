@@ -111,7 +111,7 @@
 
 /* --- Ledger table --------------------------------------------------------- */
 .ledger {
-  --ledger-cols: 46px minmax(200px, 2.3fr) 80px 84px 118px minmax(175px, 2fr) minmax(165px, 1.8fr) 74px 92px;
+  --ledger-cols: 46px minmax(190px, 2.2fr) 80px 84px 132px minmax(170px, 2fr) minmax(160px, 1.8fr) 74px 96px;
   border: 1px solid var(--line);
   border-radius: var(--r-lg);
   background: var(--surface);
@@ -351,6 +351,148 @@
 .panel-open { font-size: 13px; font-weight: 600; white-space: nowrap; }
 .panel-saving { color: var(--ink-3); }
 .panel-err { color: var(--red); font-size: 12px; }
+.panel-block--first { margin-top: 0; }
+
+/* --- Inline row editing --------------------------------------------------- */
+/* Wrapper that stops an inline editor's clicks from toggling the row. */
+.cell-edit { min-width: 0; }
+.col-progress { min-width: 0; }
+.col-progress .cell-edit { width: 100%; }
+.col-progress .progress-edit { gap: 8px; }
+.col-progress .progress-edit .mono { min-width: 30px; }
+
+/* A badge rendered as a click-to-cycle button (priority / effort / status). */
+.badge-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  display: inline-flex;
+  border-radius: var(--r-pill);
+  transition: filter 0.12s ease, transform 0.06s ease;
+}
+.badge-btn:hover { filter: brightness(0.97); }
+.badge-btn:active { transform: translateY(1px); }
+
+/* --- Panel next-steps editor ---------------------------------------------- */
+.psteps { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-direction: column; }
+.psteps--done { opacity: 0.7; margin-top: 4px; }
+.pstep {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--line-soft);
+}
+.pstep:last-child { border-bottom: none; }
+.pstep__check {
+  width: 17px;
+  height: 17px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 1.5px solid var(--line-strong);
+  background: var(--surface);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+.pstep__check:hover { border-color: var(--accent); }
+.pstep__check.is-done { background: var(--accent); border-color: var(--accent); }
+.pstep__title { font-size: 13px; color: var(--ink); min-width: 0; overflow-wrap: anywhere; }
+.pstep.is-done .pstep__title { text-decoration: line-through; color: var(--ink-3); }
+.pstep__badge { flex-shrink: 0; }
+.pstep__del {
+  flex-shrink: 0;
+  color: var(--ink-4);
+  opacity: 0;
+  transition: opacity 0.12s ease, color 0.12s ease;
+}
+.pstep:hover .pstep__del,
+.pstep:focus-within .pstep__del { opacity: 1; }
+.pstep__del:hover { color: var(--red); }
+
+.pstep-add {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+.pstep-add .input { padding: 6px 9px; font-size: 13px; }
+
+.pdone { margin-top: 8px; }
+.pdone__toggle {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: none;
+  border: none;
+  padding: 4px 0;
+  color: var(--ink-3);
+  cursor: pointer;
+}
+.pdone__toggle:hover { color: var(--ink); }
+
+/* --- Panel log-an-update -------------------------------------------------- */
+.panel-log { display: flex; flex-direction: column; gap: 8px; margin-top: 6px; }
+.panel-log .textarea { min-height: 66px; font-size: 13px; }
+.panel-log__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.panel-log__row .input { width: auto; padding: 6px 8px; font-size: 12.5px; }
+
+.precent { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.precent__item { border-left: 2px solid var(--accent-line); padding-left: 10px; }
+.precent__meta { display: flex; align-items: baseline; gap: 8px; font-size: 11px; color: var(--ink-4); }
+.precent__body {
+  margin: 3px 0 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--ink-2);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* --- Data (backup & restore) modal ---------------------------------------- */
+.data-modal { display: flex; flex-direction: column; gap: 16px; }
+.data-sec { display: flex; flex-direction: column; gap: 10px; align-items: flex-start; }
+.data-sec__title { font-size: 15px; }
+.data-sec__hint { margin: 0; max-width: 46ch; }
+.data-confirm {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+}
+.data-confirm p { margin: 0; }
+.data-confirm__warn { color: var(--ink-3); }
+.data-err {
+  margin: 0;
+  color: var(--red);
+  background: var(--red-soft);
+  border: 1px solid var(--red-line);
+  border-radius: var(--r-md);
+  padding: 8px 11px;
+  font-size: 12.5px;
+}
+.data-ok {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--green);
+  font-size: 13px;
+  font-weight: 500;
+}
+.data-note { margin: 0; }
 
 /* --- Empty / error states ------------------------------------------------- */
 .dash-state {
@@ -437,6 +579,22 @@
 .export__tab:hover { color: var(--ink); background: var(--paper-2); }
 .export__tab.is-active { color: var(--accent); border-bottom-color: var(--accent); }
 .export__count { margin-left: auto; }
+.export__fields {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  padding: 2px 2px 0;
+}
+.export__field {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  color: var(--ink-2);
+  cursor: pointer;
+}
+.export__field input { accent-color: var(--accent); cursor: pointer; }
 .export__panel { display: flex; flex-direction: column; gap: 12px; }
 .export__hint { margin: 0; }
 .export__preview {

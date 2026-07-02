@@ -12,6 +12,8 @@ import type {
   NewUpdate,
   UpdatePatch,
   ExportData,
+  BackupData,
+  ImportResult,
 } from './types';
 
 const BASE = '/api';
@@ -70,4 +72,10 @@ export const api = {
   // export
   getExport: () => request<ExportData>('/export'),
   xlsxUrl: '/api/export.xlsx',
+
+  // backup / restore (full data)
+  getBackup: () => request<BackupData>('/backup'),
+  backupUrl: '/api/backup',
+  importData: (data: BackupData) =>
+    request<ImportResult>('/import', { method: 'POST', body: JSON.stringify(data) }),
 };

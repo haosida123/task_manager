@@ -11,18 +11,27 @@ slide deck (17 projects, 57 tasks, 92 dated log entries).
 
 - **Portfolio dashboard** — every project in one ledger with priority + effort badges,
   progress bars, the latest update, and next steps. Search, filter (status / priority /
-  area), and sort. Expand any row inline, or click through to the full project page.
+  area), and sort. Drag rows to reorder (the page auto-scrolls when you drag near an edge).
+- **Edit straight from the dashboard** — area, priority, effort, progress, and status are
+  editable **inline** in each row (click a badge to change it, drag the progress slider).
+  Expand a row to edit the overview, manage next steps (add / check off / delete), and
+  **log an update** — without leaving the page.
+- **Binary status** — everything that isn't finished is **Undone** (the default view);
+  **Done** acts like an archive and is hidden until you switch the Status filter to Done
+  or All.
 - **Project pages** — an editable "lab notebook": rename/describe, set status /
   priority / effort / progress / due date / collaborators / tags, a task checklist
-  (with per-task priority & effort), and a dated progress log.
-- **Everything is editable and persists** — every field (name, area, description, status,
-  priority, effort, progress, due date, collaborators, tags, tasks, and dated updates) is
-  editable in place. Each edit is saved locally to a JSON file (`server/data/db.json`) on
-  your machine and a green **"Saved locally"** confirmation appears — no more editing in
-  PowerPoint.
-- **Export for slides** — one click gives you (1) a **copy-paste table** that pastes into
-  PowerPoint or Word as a real, editable table, (2) a **plain-text outline**, and (3) a
-  downloadable **.xlsx / .csv** spreadsheet. Use the **Export** button on the dashboard.
+  (with per-task priority & effort, drag to reorder), and a dated progress log.
+- **Everything is editable and persists** — every field is editable in place and saved
+  locally to a JSON file (`server/data/db.json`), with a green **"Saved locally"**
+  confirmation — no more editing in PowerPoint.
+- **Export for slides** — the **Export** button gives you (1) a **copy-paste table** that
+  pastes into PowerPoint or Word as a real, editable table, (2) a **plain-text outline**,
+  and (3) a downloadable **.xlsx / .csv** spreadsheet. For the table and text formats you
+  can choose which columns to include (priority / effort / progress / status).
+- **Backup & restore** — the **Data** button downloads a complete, re-importable JSON
+  backup and restores from one (a snapshot is taken automatically before any restore).
+  The server also keeps rolling local backups in `server/data/backups/`.
 
 ## Tech
 
@@ -84,6 +93,10 @@ client/
 | POST   | `/api/projects/:id/updates`  | log a dated update             |
 | PATCH  | `/api/updates/:id`           | edit an update                 |
 | DELETE | `/api/updates/:id`           | delete an update               |
+| POST   | `/api/projects/reorder`      | reorder projects               |
+| POST   | `/api/projects/:id/tasks/reorder` | reorder a project's tasks |
 | GET    | `/api/export`                | portfolio as export-ready JSON |
 | GET    | `/api/export.xlsx`           | download the portfolio as .xlsx|
+| GET    | `/api/backup`                | download a re-importable backup|
+| POST   | `/api/import`                | restore from a backup (replaces all) |
 | POST   | `/api/reset`                 | reset data back to the seed    |

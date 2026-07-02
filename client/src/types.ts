@@ -127,3 +127,20 @@ export interface ExportData {
   generatedAt: string;
   projects: ExportProject[];
 }
+
+// GET /api/backup — the raw, re-importable database snapshot.
+export interface BackupData {
+  version?: number;
+  exportedAt?: string;
+  projects: Project[];
+  tasks: Task[];
+  updates: Update[];
+}
+
+// POST /api/import result.
+export interface ImportResult {
+  ok: true;
+  projects: number;
+  tasks: number;
+  updates: number;
+}

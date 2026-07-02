@@ -57,22 +57,49 @@ export const TABLE_COLUMNS: TableColumn[] = [
   { key: 'next', label: 'Next steps', text: (p) => p.nextSteps.join('\n'), html: stepsHtml },
 ];
 
+// The optional meta columns the user can include/exclude in the table + text
+// exports. Project / Latest update / Next steps are always included.
+export interface ExportFields {
+  priority: boolean;
+  effort: boolean;
+  progress: boolean;
+  status: boolean;
+}
+export const ALL_FIELDS: ExportFields = {
+  priority: true,
+  effort: true,
+  progress: true,
+  status: true,
+};
+const TOGGLEABLE_KEYS = ['priority', 'effort', 'progress', 'status'];
+
+function pickColumns(fields: ExportFields): TableColumn[] {
+  return TABLE_COLUMNS.filter((c) =>
+    TOGGLEABLE_KEYS.includes(c.key) ? fields[c.key as keyof ExportFields] : true,
+  );
+}
+
 // --- Rich HTML table (for PowerPoint / Word) --------------------------------
-export function toHtmlTable(projects: ExportProject[]): string {
-  const th = TABLE_COLUMNS.map(
-    (c) =>
-      `<th style="border:1px solid #b8ad95;padding:6px 10px;text-align:${c.align || 'left'};background:#efe9dd;color:#3a3630">${esc(
-        c.label,
-      )}</th>`,
-  ).join('');
+export function toHtmlTable(projects: ExportProject[], fields: ExportFields = ALL_FIELDS): string {
+  const columns = pickColumns(fields);
+  const th = columns
+    .map(
+      (c) =>
+        `<th style="border:1px solid #b8ad95;padding:6px 10px;text-align:${c.align || 'left'};background:#efe9dd;color:#3a3630">${esc(
+          c.label,
+        )}</th>`,
+    )
+    .join('');
   const trs = projects
     .map((p) => {
-      const tds = TABLE_COLUMNS.map(
-        (c) =>
-          `<td style="border:1px solid #cabfa6;padding:6px 10px;vertical-align:top;text-align:${
-            c.align || 'left'
-          }">${c.html(p)}</td>`,
-      ).join('');
+      const tds = columns
+        .map(
+          (c) =>
+            `<td style="border:1px solid #cabfa6;padding:6px 10px;vertical-align:top;text-align:${
+              c.align || 'left'
+            }">${c.html(p)}</td>`,
+        )
+        .join('');
       return `<tr>${tds}</tr>`;
     })
     .join('');
@@ -90,31 +117,35 @@ function delimitedCell(value: string, delim: string): string {
   return value;
 }
 
-function toDelimited(projects: ExportProject[], delim: string): string {
-  const header = TABLE_COLUMNS.map((c) => delimitedCell(c.label, delim)).join(delim);
+function toDelimited(projects: ExportProject[], delim: string, fields: ExportFields): string {
+  const columns = pickColumns(fields);
+  const header = columns.map((c) => delimitedCell(c.label, delim)).join(delim);
   const rows = projects.map((p) =>
-    TABLE_COLUMNS.map((c) => delimitedCell(c.text(p), delim)).join(delim),
+    columns.map((c) => delimitedCell(c.text(p), delim)).join(delim),
   );
   return [header, ...rows].join('\r\n');
 }
 
-export function toTSV(projects: ExportProject[]): string {
-  return toDelimited(projects, '\t');
+export function toTSV(projects: ExportProject[], fields: ExportFields = ALL_FIELDS): string {
+  return toDelimited(projects, '\t', fields);
 }
 
-export function toCSV(projects: ExportProject[]): string {
-  return toDelimited(projects, ',');
+export function toCSV(projects: ExportProject[], fields: ExportFields = ALL_FIELDS): string {
+  return toDelimited(projects, ',', fields);
 }
 
 // --- Plain-text outline -----------------------------------------------------
-export function toPlainText(projects: ExportProject[]): string {
+export function toPlainText(projects: ExportProject[], fields: ExportFields = ALL_FIELDS): string {
   const lines: string[] = [];
   projects.forEach((p, i) => {
     if (i > 0) lines.push('');
     lines.push(p.area ? `${p.name}  —  ${p.area}` : p.name);
-    lines.push(
-      `Priority: ${p.priorityLabel} · Effort: ${p.effortLabel} · Progress: ${p.progress}% · Status: ${p.statusLabel}`,
-    );
+    const meta: string[] = [];
+    if (fields.priority) meta.push(`Priority: ${p.priorityLabel}`);
+    if (fields.effort) meta.push(`Effort: ${p.effortLabel}`);
+    if (fields.progress) meta.push(`Progress: ${p.progress}%`);
+    if (fields.status) meta.push(`Status: ${p.statusLabel}`);
+    if (meta.length) lines.push(meta.join(' · '));
     if (p.latestUpdate) {
       lines.push(`Latest update (${formatDate(p.latestUpdate.date)}): ${p.latestUpdate.body}`);
     }
@@ -130,9 +161,12 @@ export function toPlainText(projects: ExportProject[]): string {
 
 // Copy a rich table: HTML for apps that accept it (PowerPoint/Word/Sheets),
 // with a TSV plain-text fallback. Returns false if the browser blocks it.
-export async function copyTable(projects: ExportProject[]): Promise<boolean> {
-  const html = toHtmlTable(projects);
-  const tsv = toTSV(projects);
+export async function copyTable(
+  projects: ExportProject[],
+  fields: ExportFields = ALL_FIELDS,
+): Promise<boolean> {
+  const html = toHtmlTable(projects, fields);
+  const tsv = toTSV(projects, fields);
   try {
     if (navigator.clipboard && typeof ClipboardItem !== 'undefined') {
       await navigator.clipboard.write([

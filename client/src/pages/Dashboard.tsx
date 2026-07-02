@@ -8,6 +8,7 @@ import type { SortKey } from '../components/dashboard/ControlBar';
 import { ProjectTable } from '../components/dashboard/ProjectTable';
 import { NewProjectModal } from '../components/dashboard/NewProjectModal';
 import { ExportModal } from '../components/dashboard/ExportModal';
+import { DataModal } from '../components/dashboard/DataModal';
 import { api } from '../api';
 import type { ProjectSummary, ProjectPatch } from '../types';
 import { PRIORITY_RANK } from '../lib/format';
@@ -25,12 +26,14 @@ export default function Dashboard() {
   const [error, setError] = useState<string | null>(null);
 
   const [search, setSearch] = useState('');
-  const [status, setStatus] = useState('all');
+  // Default view shows work that isn't done; "done" acts like an archive.
+  const [status, setStatus] = useState('undone');
   const [priority, setPriority] = useState('all');
   const [area, setArea] = useState('all');
   const [sort, setSort] = useState<SortKey>('manual');
   const [modalOpen, setModalOpen] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
+  const [dataOpen, setDataOpen] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -55,35 +58,42 @@ export default function Dashboard() {
     setProjects((prev) => prev.map((p) => (p.id === id ? updated : p)));
   }, []);
 
+  // Merge derived summary fields (next steps, latest update…) after edits made
+  // in a row's expanded panel, so the collapsed row reflects them immediately.
+  const handleSummaryPatch = useCallback((id: string, patch: Partial<ProjectSummary>) => {
+    setProjects((prev) => prev.map((p) => (p.id === id ? { ...p, ...patch } : p)));
+  }, []);
+
   const handleCreated = useCallback((created: ProjectSummary) => {
     setProjects((prev) => [created, ...prev]);
   }, []);
 
-  // Drag-to-reorder: `ids` is the full desired order. Update local state
-  // optimistically, then persist. On failure, reload from the server.
+  // Drag-to-reorder: `ids` is the new order of the *visible* projects. Any
+  // hidden projects (e.g. done/archived, filtered out of the default view) are
+  // appended after them in their current order, so the global order stays
+  // consistent and done items sink to the bottom. Update optimistically, persist.
   const handleReorder = useCallback(
     async (ids: string[]) => {
-      setProjects((prev) => {
-        const byId = new Map(prev.map((p) => [p.id, p]));
-        return ids
-          .map((id, i) => {
-            const p = byId.get(id);
-            return p ? { ...p, order: i } : null;
-          })
-          .filter((p): p is ProjectSummary => p !== null);
-      });
+      const visibleSet = new Set(ids);
+      const hidden = projects
+        .filter((p) => !visibleSet.has(p.id))
+        .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+        .map((p) => p.id);
+      const fullOrder = [...ids, ...hidden];
+      const orderMap = new Map(fullOrder.map((id, i) => [id, i]));
+      setProjects((prev) => prev.map((p) => ({ ...p, order: orderMap.get(p.id) ?? p.order })));
       try {
-        await api.reorderProjects(ids);
+        await api.reorderProjects(fullOrder);
       } catch {
         void load();
       }
     },
-    [load],
+    [projects, load],
   );
 
   const resetFilters = useCallback(() => {
     setSearch('');
-    setStatus('all');
+    setStatus('undone');
     setPriority('all');
     setArea('all');
   }, []);
@@ -93,13 +103,13 @@ export default function Dashboard() {
   // Aggregates for the StatStrip + subtitle (computed over the whole portfolio).
   const stats = useMemo(() => {
     const total = projects.length;
-    const active = projects.filter((p) => p.status === 'active').length;
+    const undone = projects.filter((p) => p.status !== 'done').length;
     const highPriority = projects.filter((p) => p.priority === 'high').length;
     const openTasks = projects.reduce((sum, p) => sum + p.openTasks, 0);
     const avgProgress = total
       ? Math.round(projects.reduce((sum, p) => sum + p.progress, 0) / total)
       : 0;
-    return { total, active, highPriority, openTasks, avgProgress };
+    return { total, undone, highPriority, openTasks, avgProgress };
   }, [projects]);
 
   const areas = useMemo(
@@ -115,7 +125,9 @@ export default function Dashboard() {
     const filtered = projects.filter(
       (p) =>
         matchesSearch(p, q) &&
-        (status === 'all' || p.status === status) &&
+        // "undone" = any status except done; otherwise exact status match.
+        (status === 'all' ||
+          (status === 'undone' ? p.status !== 'done' : p.status === status)) &&
         (priority === 'all' || p.priority === priority) &&
         (area === 'all' || p.area === area),
     );
@@ -145,16 +157,17 @@ export default function Dashboard() {
     });
   }, [projects, search, status, priority, area, sort]);
 
-  // Drag-to-reorder is only meaningful in Custom order with no active filter
-  // (so the visible list is the full ordered portfolio).
-  const filtersActive =
-    search.trim() !== '' || status !== 'all' || priority !== 'all' || area !== 'all';
-  const reorderable = sort === 'manual' && !filtersActive;
+  // Drag-to-reorder is meaningful in Custom order when no search/priority/area
+  // filter is narrowing the list. The status view (undone by default, or all)
+  // still allows it — hidden done items are appended by handleReorder.
+  const otherFiltersActive = search.trim() !== '' || priority !== 'all' || area !== 'all';
+  const reorderable =
+    sort === 'manual' && !otherFiltersActive && (status === 'undone' || status === 'all');
 
   const subtitle = loading
     ? 'Loading portfolio…'
     : `${stats.total} ${stats.total === 1 ? 'project' : 'projects'}` +
-      ` · ${stats.active} active · ${stats.highPriority} high priority`;
+      ` · ${stats.undone} undone · ${stats.highPriority} high priority`;
 
   return (
     <div className="container dashboard fade-in">
@@ -164,6 +177,9 @@ export default function Dashboard() {
           <p className="dash-head__sub muted">{subtitle}</p>
         </div>
         <div className="row gap-8">
+          <Button icon="database" onClick={() => setDataOpen(true)}>
+            Data
+          </Button>
           <Button icon="archive" onClick={() => setExportOpen(true)}>
             Export
           </Button>
@@ -189,7 +205,7 @@ export default function Dashboard() {
         <>
           <StatStrip
             total={stats.total}
-            active={stats.active}
+            undone={stats.undone}
             highPriority={stats.highPriority}
             avgProgress={stats.avgProgress}
             openTasks={stats.openTasks}
@@ -225,6 +241,7 @@ export default function Dashboard() {
               projects={visible}
               refYear={refYear}
               onPatch={handlePatch}
+              onSummaryPatch={handleSummaryPatch}
               reorderable={reorderable}
               onReorder={handleReorder}
             />
@@ -242,6 +259,15 @@ export default function Dashboard() {
         open={exportOpen}
         onClose={() => setExportOpen(false)}
         projectIds={visible.map((p) => p.id)}
+      />
+
+      <DataModal
+        open={dataOpen}
+        onClose={() => setDataOpen(false)}
+        onImported={() => {
+          setDataOpen(false);
+          void load();
+        }}
       />
     </div>
   );

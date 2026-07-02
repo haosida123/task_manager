@@ -9,6 +9,7 @@ import {
 } from '../../lib/format';
 import { PriorityBadge, EffortBadge, IconButton, Select, Icon } from '../ui';
 import { EditableText } from './EditableText';
+import { useEdgeAutoScroll } from '../../lib/useEdgeAutoScroll';
 
 const PRIORITY_SELECT = PRIORITY_OPTIONS.map((p) => ({ value: p, label: PRIORITY_LABEL[p] }));
 const EFFORT_SELECT = EFFORT_OPTIONS.map((e) => ({ value: e, label: EFFORT_LABEL[e] }));
@@ -152,6 +153,9 @@ export function TaskList({ tasks, onAdd, onPatch, onDelete, onReorder }: TaskLis
   const [showDone, setShowDone] = useState(true);
   const [dragId, setDragId] = useState<string | null>(null);
   const [overId, setOverId] = useState<string | null>(null);
+
+  // Auto-scroll the page while dragging near the top/bottom edge.
+  useEdgeAutoScroll(dragId !== null);
 
   const { open, done } = useMemo(() => {
     const sorted = [...tasks].sort((a, b) => a.order - b.order);

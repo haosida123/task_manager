@@ -3,11 +3,11 @@ const path = require('path');
 const express = require('express');
 const cors = require('cors');
 const XLSX = require('xlsx');
-const { load, persist, reset, id, now } = require('./db');
+const { load, persist, reset, replaceAll, id, now } = require('./db');
 
 const app = express();
 app.use(cors());
-app.use(express.json({ limit: '1mb' }));
+app.use(express.json({ limit: '25mb' }));
 
 const PORT = process.env.PORT || 4000;
 
@@ -275,6 +275,59 @@ app.post('/api/reset', (req, res) => {
 });
 
 app.get('/api/health', (req, res) => res.json({ ok: true }));
+
+// ---- backup / restore (full, round-trippable data) -------------------------
+
+// Raw, re-importable snapshot of the whole database.
+app.get('/api/backup', (req, res) => {
+  const db = load();
+  const payload = {
+    version: 1,
+    exportedAt: now(),
+    projects: db.projects,
+    tasks: db.tasks,
+    updates: db.updates,
+  };
+  const stamp = new Date().toISOString().slice(0, 10);
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  res.setHeader(
+    'Content-Disposition',
+    `attachment; filename="research-ledger-backup-${stamp}.json"`,
+  );
+  res.send(JSON.stringify(payload, null, 2));
+});
+
+// Restore from a backup file. Destructive: replaces ALL data (a pre-import
+// snapshot is taken automatically). Accepts the shape produced by /api/backup.
+app.post('/api/import', (req, res) => {
+  const body = req.body || {};
+  const { projects, tasks, updates } = body;
+  if (!Array.isArray(projects) || !Array.isArray(tasks) || !Array.isArray(updates)) {
+    return res.status(400).json({
+      error: 'Invalid backup file: expected "projects", "tasks", and "updates" arrays.',
+    });
+  }
+  if (projects.some((p) => !p || typeof p.id !== 'string')) {
+    return res.status(400).json({ error: 'Invalid backup file: a project is missing an id.' });
+  }
+  if (tasks.some((t) => !t || typeof t.id !== 'string' || typeof t.projectId !== 'string')) {
+    return res.status(400).json({ error: 'Invalid backup file: a task is missing an id/projectId.' });
+  }
+  // Guarantee the numeric ordering fields exist so summaries/sorts stay stable.
+  projects.forEach((p, i) => {
+    if (typeof p.order !== 'number') p.order = i;
+  });
+  tasks.forEach((t, i) => {
+    if (typeof t.order !== 'number') t.order = i;
+  });
+  const db = replaceAll({ projects, tasks, updates });
+  res.json({
+    ok: true,
+    projects: db.projects.length,
+    tasks: db.tasks.length,
+    updates: db.updates.length,
+  });
+});
 
 // ---- export ----------------------------------------------------------------
 

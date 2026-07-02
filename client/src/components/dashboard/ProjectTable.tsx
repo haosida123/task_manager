@@ -3,11 +3,13 @@ import { useState } from 'react';
 import type { ProjectSummary, ProjectPatch } from '../../types';
 import { ProjectRow } from './ProjectRow';
 import { Icon } from '../ui';
+import { useEdgeAutoScroll } from '../../lib/useEdgeAutoScroll';
 
 interface ProjectTableProps {
   projects: ProjectSummary[];
   refYear: number;
   onPatch: (id: string, patch: ProjectPatch) => Promise<void>;
+  onSummaryPatch: (id: string, patch: Partial<ProjectSummary>) => void;
   reorderable: boolean;
   onReorder: (ids: string[]) => void;
 }
@@ -16,11 +18,15 @@ export function ProjectTable({
   projects,
   refYear,
   onPatch,
+  onSummaryPatch,
   reorderable,
   onReorder,
 }: ProjectTableProps) {
   const [dragId, setDragId] = useState<string | null>(null);
   const [overId, setOverId] = useState<string | null>(null);
+
+  // Auto-scroll the page while dragging near the top/bottom edge.
+  useEdgeAutoScroll(dragId !== null);
 
   function commitDrop() {
     if (dragId && overId && dragId !== overId) {
@@ -74,6 +80,7 @@ export function ProjectTable({
               project={p}
               refYear={refYear}
               onPatch={onPatch}
+              onSummaryPatch={onSummaryPatch}
               reorderable={reorderable}
               dragging={dragId === p.id}
               dropTarget={reorderable && overId === p.id && dragId !== null && dragId !== p.id}
