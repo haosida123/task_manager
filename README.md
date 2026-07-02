@@ -1,24 +1,26 @@
 # Research Ledger — Task Manager
 
 An academic-style task manager for tracking research projects, their latest updates,
-next steps, priority, and effort. Built for keeping a growing portfolio of computational
-mechanics / ML projects legible at a glance — inspired by Asana, styled like a journal.
+next steps, priority, and effort. Built to keep a growing research portfolio legible at a
+glance — inspired by Asana, styled like a journal.
 
-Seeded with **your real projects and dated updates**, extracted from the weekly-update
-slide deck (17 projects, 57 tasks, 92 dated log entries).
+Ships with a small set of **fictional demo projects** (`server/seed.json`) so you can try
+it right away. Your own data stays local in `server/data/db.json` (git-ignored) and never
+touches the repo.
 
 ## What's inside
 
 - **Portfolio dashboard** — every project in one ledger with priority + effort badges,
   progress bars, the latest update, and next steps. Search, filter (status / priority /
-  area), and sort. Drag rows to reorder (the page auto-scrolls when you drag near an edge).
+  area), and sort — including **sort by status**. Drag rows to reorder (the page
+  auto-scrolls when you drag near an edge).
 - **Edit straight from the dashboard** — area, priority, effort, progress, and status are
-  editable **inline** in each row (click a badge to change it, drag the progress slider).
-  Expand a row to edit the overview, manage next steps (add / check off / delete), and
-  **log an update** — without leaving the page.
-- **Binary status** — everything that isn't finished is **Undone** (the default view);
-  **Done** acts like an archive and is hidden until you switch the Status filter to Done
-  or All.
+  editable **inline** in each row (click a badge to pick a value from a **dropdown**, drag
+  the progress slider). Expand a row to edit the overview, manage next steps (add / check
+  off / delete), and **log an update** — without leaving the page.
+- **Undone view** — the default filter shows everything that isn't finished (any status
+  except Done); **Done** acts like an archive. Statuses stay granular — Active / Planning /
+  In review / On hold / Done — and "Undone" is simply the view over all not-done work.
 - **Project pages** — an editable "lab notebook": rename/describe, set status /
   priority / effort / progress / due date / collaborators / tags, a task checklist
   (with per-task priority & effort, drag to reorder), and a dated progress log.
@@ -31,7 +33,16 @@ slide deck (17 projects, 57 tasks, 92 dated log entries).
   can choose which columns to include (priority / effort / progress / status).
 - **Backup & restore** — the **Data** button downloads a complete, re-importable JSON
   backup and restores from one (a snapshot is taken automatically before any restore).
-  The server also keeps rolling local backups in `server/data/backups/`.
+  **Back up now** writes an on-demand snapshot, and the server keeps rolling local backups
+  in `server/data/backups/` (a daily snapshot plus one before every restore).
+- **Backup to a folder (e.g. cloud-synced)** — set a **backup folder** in the Data window
+  (stored in the database). On WSL, use a `/mnt/c/...` path pointed at a OneDrive/Drive
+  folder, and every backup also drops a copy there — syncing to the cloud automatically.
+- **Switch ledgers** — a source switcher previews the live data, the built-in demo seed, or
+  any local backup snapshot **read-only**, and can restore the live data from any of them.
+- **Editable header labels** — the masthead tagline and the dashboard title are
+  click-to-edit and saved in the database, so the app ships with generic defaults and you
+  make it your own without touching the code.
 
 ## Tech
 
@@ -64,7 +75,7 @@ delete that file or `POST /api/reset`.
 server/
   index.js      Express REST API (projects / tasks / updates) + serves the built client
   db.js         JSON-file persistence (atomic writes)
-  seed.json     your real projects, tasks, and dated updates
+  seed.json     fictional demo projects, tasks, and updates (your data stays in server/data/)
 client/
   src/
     types.ts             shared domain types
@@ -98,5 +109,10 @@ client/
 | GET    | `/api/export`                | portfolio as export-ready JSON |
 | GET    | `/api/export.xlsx`           | download the portfolio as .xlsx|
 | GET    | `/api/backup`                | download a re-importable backup|
+| POST   | `/api/backup`                | write an on-demand local snapshot (+ backup folder) |
 | POST   | `/api/import`                | restore from a backup (replaces all) |
+| GET    | `/api/sources`               | list data sources (live / seed / backups) |
+| POST   | `/api/restore`               | restore live data from a seed / backup source |
+| GET    | `/api/settings`              | read settings (backup folder, header labels) |
+| PATCH  | `/api/settings`              | update settings                |
 | POST   | `/api/reset`                 | reset data back to the seed    |
