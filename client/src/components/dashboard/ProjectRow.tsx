@@ -8,6 +8,7 @@ import type { KeyboardEvent, MouseEvent, DragEvent } from 'react';
 import { Link } from 'react-router-dom';
 import {
   AvatarStack,
+  BadgeSelect,
   EffortBadge,
   Icon,
   IconButton,
@@ -38,6 +39,11 @@ import {
 import { api } from '../../api';
 import { EditableText } from '../detail/EditableText';
 
+// Dropdown option lists for the inline badge selects (built once).
+const PRIORITY_MENU = PRIORITY_OPTIONS.map((v) => ({ value: v, label: PRIORITY_LABEL[v] }));
+const EFFORT_MENU = EFFORT_OPTIONS.map((v) => ({ value: v, label: EFFORT_LABEL[v] }));
+const STATUS_MENU = STATUS_OPTIONS.map((v) => ({ value: v, label: STATUS_LABEL[v] }));
+
 interface ProjectRowProps {
   project: ProjectSummary;
   refYear: number;
@@ -52,11 +58,6 @@ interface ProjectRowProps {
   onDragOverRow: () => void;
   onDropRow: () => void;
   onDragEndRow: () => void;
-}
-
-function cycle<T>(options: readonly T[], current: T): T {
-  const idx = options.indexOf(current);
-  return options[(idx + 1) % options.length];
 }
 
 // Today as YYYY-MM-DD in local time (no timezone drift).
@@ -183,7 +184,7 @@ export function ProjectRow({
       replaceTask(await api.updateTask(t.id, { title }));
     });
 
-  const cycleTaskField = (t: Task, taskPatch: Partial<Pick<Task, 'priority' | 'effort'>>) =>
+  const patchTaskField = (t: Task, taskPatch: Partial<Pick<Task, 'priority' | 'effort'>>) =>
     run(async () => {
       replaceTask(await api.updateTask(t.id, taskPatch));
     });
@@ -360,35 +361,25 @@ export function ProjectRow({
         </div>
 
         {/* priority */}
-        <div className="col-priority">
-          <button
-            type="button"
-            className="badge-btn"
-            title={`Priority: ${PRIORITY_LABEL[project.priority]} — click to change`}
-            aria-label="Change priority"
-            onClick={(e) => {
-              stop(e);
-              void patch({ priority: cycle(PRIORITY_OPTIONS, project.priority) });
-            }}
-          >
-            <PriorityBadge value={project.priority} />
-          </button>
+        <div className="col-priority" onClick={stop}>
+          <BadgeSelect
+            value={project.priority}
+            options={PRIORITY_MENU}
+            onChange={(v) => void patch({ priority: v })}
+            renderBadge={(v) => <PriorityBadge value={v} />}
+            ariaLabel="Change priority"
+          />
         </div>
 
         {/* effort */}
-        <div className="col-effort">
-          <button
-            type="button"
-            className="badge-btn"
-            title={`Effort: ${EFFORT_LABEL[project.effort]} — click to change`}
-            aria-label="Change effort"
-            onClick={(e) => {
-              stop(e);
-              void patch({ effort: cycle(EFFORT_OPTIONS, project.effort) });
-            }}
-          >
-            <EffortBadge value={project.effort} />
-          </button>
+        <div className="col-effort" onClick={stop}>
+          <BadgeSelect
+            value={project.effort}
+            options={EFFORT_MENU}
+            onChange={(v) => void patch({ effort: v })}
+            renderBadge={(v) => <EffortBadge value={v} />}
+            ariaLabel="Change effort"
+          />
         </div>
 
         {/* progress */}
@@ -439,19 +430,14 @@ export function ProjectRow({
         </div>
 
         {/* status */}
-        <div className="col-status">
-          <button
-            type="button"
-            className="badge-btn"
-            title={`Status: ${STATUS_LABEL[project.status]} — click to change`}
-            aria-label="Change status"
-            onClick={(e) => {
-              stop(e);
-              void patch({ status: cycle(STATUS_OPTIONS, project.status) });
-            }}
-          >
-            <StatusBadge value={project.status} />
-          </button>
+        <div className="col-status" onClick={stop}>
+          <BadgeSelect
+            value={project.status}
+            options={STATUS_MENU}
+            onChange={(v) => void patch({ status: v })}
+            renderBadge={(v) => <StatusBadge value={v} />}
+            ariaLabel="Change status"
+          />
         </div>
       </div>
 
@@ -501,19 +487,14 @@ export function ProjectRow({
                               ariaLabel="Step title"
                               onCommit={(v) => v && void editTaskTitle(t, v)}
                             />
-                            <button
-                              type="button"
-                              className="badge-btn pstep__badge"
-                              title={`Priority: ${PRIORITY_LABEL[t.priority]} — click to change`}
-                              aria-label="Change step priority"
-                              onClick={() =>
-                                void cycleTaskField(t, {
-                                  priority: cycle(PRIORITY_OPTIONS, t.priority),
-                                })
-                              }
-                            >
-                              <PriorityBadge value={t.priority} />
-                            </button>
+                            <BadgeSelect
+                              value={t.priority}
+                              options={PRIORITY_MENU}
+                              onChange={(v) => void patchTaskField(t, { priority: v })}
+                              renderBadge={(v) => <PriorityBadge value={v} />}
+                              ariaLabel="Change step priority"
+                              className="pstep__badge"
+                            />
                             <IconButton
                               icon="trash"
                               size={14}

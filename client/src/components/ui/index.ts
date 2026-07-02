@@ -1,6 +1,8 @@
 // Barrel export for shared UI primitives.
 export { Icon } from './Icon';
 export { Badge, PriorityBadge, EffortBadge, StatusBadge } from './Badge';
+export { BadgeSelect } from './BadgeSelect';
+export type { BadgeSelectOption } from './BadgeSelect';
 export { Button, IconButton } from './Button';
 export { Field, TextInput, TextArea, Select } from './Field';
 export { Modal } from './Modal';
