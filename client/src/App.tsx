@@ -1,21 +1,33 @@
 import { Routes, Route, Link, useLocation } from 'react-router-dom';
 import Dashboard from './pages/Dashboard';
 import ProjectDetail from './pages/ProjectDetail';
+import { EditableText } from './components/detail/EditableText';
+import { useSettings } from './lib/settings';
+
+const DEFAULT_BRAND = 'Research portfolio';
 
 export default function App() {
   const location = useLocation();
   const onDashboard = location.pathname === '/';
+  const { settings, patch } = useSettings();
 
   return (
     <div className="app-shell">
       <header className="masthead">
         <div className="container masthead__inner">
-          <Link to="/" className="masthead__brand link-plain">
-            <span className="masthead__mark">Research Ledger</span>
-            <span className="masthead__sub upper">
-              Research portfolio
-            </span>
-          </Link>
+          <div className="masthead__brand">
+            <Link to="/" className="masthead__mark link-plain">
+              Research Ledger
+            </Link>
+            <EditableText
+              tag="span"
+              className="masthead__sub upper"
+              value={settings?.brandLine || DEFAULT_BRAND}
+              emptyText={DEFAULT_BRAND}
+              ariaLabel="Header tagline"
+              onCommit={(v) => void patch({ brandLine: v || null })}
+            />
+          </div>
           <nav className="masthead__nav">
             <Link to="/" className={`masthead__link ${onDashboard ? 'is-active' : ''}`}>
               Portfolio

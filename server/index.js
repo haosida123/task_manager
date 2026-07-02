@@ -337,6 +337,16 @@ app.patch('/api/settings', (req, res) => {
     }
     patch.backupDir = v && v.trim() ? v.trim() : null;
   }
+  // Short free-text header labels stored in the database.
+  for (const key of ['brandLine', 'portfolioTitle']) {
+    if (key in body) {
+      const v = body[key];
+      if (v !== null && typeof v !== 'string') {
+        return res.status(400).json({ error: `${key} must be a string, or null to reset it.` });
+      }
+      patch[key] = v && v.trim() ? v.trim().slice(0, 200) : null;
+    }
+  }
   const settings = updateSettings(patch);
   res.json({ ...settings, folder: dirStatus(settings.backupDir) });
 });

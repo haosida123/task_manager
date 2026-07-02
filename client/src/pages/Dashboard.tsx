@@ -13,6 +13,8 @@ import { api } from '../api';
 import type { ProjectSummary, ProjectPatch, DataSource } from '../types';
 import { PRIORITY_RANK, STATUS_RANK } from '../lib/format';
 import { Icon } from '../components/ui';
+import { EditableText } from '../components/detail/EditableText';
+import { useSettings } from '../lib/settings';
 import '../components/dashboard/dashboard.css';
 
 function matchesSearch(p: ProjectSummary, q: string): boolean {
@@ -54,6 +56,8 @@ export default function Dashboard() {
   const [sources, setSources] = useState<DataSource[]>([]);
   const [restoring, setRestoring] = useState(false);
   const readOnly = source !== 'live';
+
+  const { settings, patch: patchSettings } = useSettings();
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -241,7 +245,14 @@ export default function Dashboard() {
     <div className="container dashboard fade-in">
       <header className="dash-head">
         <div>
-          <h1 className="dash-head__title serif">Research Portfolio</h1>
+          <EditableText
+            tag="h1"
+            className="dash-head__title serif"
+            value={settings?.portfolioTitle || 'Research Portfolio'}
+            emptyText="Research Portfolio"
+            ariaLabel="Portfolio title"
+            onCommit={(v) => void patchSettings({ portfolioTitle: v || null })}
+          />
           <p className="dash-head__sub muted">{subtitle}</p>
         </div>
         <div className="row gap-8">

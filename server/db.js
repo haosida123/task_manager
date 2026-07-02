@@ -191,7 +191,12 @@ function readSource(sourceId) {
 // --- Settings (stored inside the database) ---------------------------------
 
 function getSettings() {
-  return { backupDir: load().settings.backupDir || null };
+  const s = load().settings;
+  return {
+    backupDir: s.backupDir || null,
+    brandLine: typeof s.brandLine === 'string' ? s.brandLine : null,
+    portfolioTitle: typeof s.portfolioTitle === 'string' ? s.portfolioTitle : null,
+  };
 }
 
 // Merge a partial settings patch and persist. Returns the full settings object.

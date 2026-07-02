@@ -1,7 +1,7 @@
 /* ============================================================================
    Design tokens — "Research Ledger" academic theme.
-   Warm paper background, ink typography, hairline rules, restrained plum accent
-   (a nod to a university). No heavy shadows; depth comes from borders + tone.
+   Warm paper background, ink typography, hairline rules, restrained plum accent.
+   No heavy shadows; depth comes from borders + tone.
    ========================================================================== */
 :root {
   /* --- Surfaces & ink ----------------------------------------------------- */
@@ -19,7 +19,7 @@
   --line-strong: #d3cab4;    /* emphasized rule */
   --line-soft: #ece6d8;      /* very subtle divider */
 
-  /* --- Accent (plum / a university purple, muted) ------------------------- */
+  /* --- Accent (muted plum) ------------------------------------------------ */
   --accent: #4e2a84;
   --accent-deep: #3a1f66;
   --accent-soft: #ede7f3;    /* tint background */

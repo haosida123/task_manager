@@ -148,6 +148,8 @@ export interface ImportResult {
 // GET/PATCH /api/settings — configuration stored inside the database.
 export interface Settings {
   backupDir: string | null;
+  brandLine: string | null; // masthead tagline
+  portfolioTitle: string | null; // dashboard heading
 }
 
 export interface FolderStatus {
