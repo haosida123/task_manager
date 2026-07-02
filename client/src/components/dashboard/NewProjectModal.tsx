@@ -122,7 +122,7 @@ export function NewProjectModal({ open, onClose, onCreated }: NewProjectModalPro
           <TextInput
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="e.g. Neural GSM CZM paper"
+            placeholder="e.g. Solver benchmark suite"
             autoFocus
             required
           />
